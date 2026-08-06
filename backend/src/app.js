@@ -58,7 +58,10 @@ app.use(cookieParser());
 // ─── 6. HTTP Request Logger (Morgan → Winston) ────────────────────────────────
 app.use(httpLogger);
 
-// ─── 7. API Routes ────────────────────────────────────────────────────────────
+// ─── 7. Serve Static Frontend Files ───────────────────────────────────────────
+app.use(express.static('public'));
+
+// ─── 8. API Routes ────────────────────────────────────────────────────────────
 app.use(serverConfig.apiPrefix, routes);
 
 // ─── 8. 404 — Unknown Route ───────────────────────────────────────────────────

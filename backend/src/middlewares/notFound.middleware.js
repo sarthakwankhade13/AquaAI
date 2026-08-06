@@ -10,7 +10,7 @@
  *   app.use(errorHandler); // must be last
  */
 
-import { sendError } from '../utils/apiResponse.js';
+import { sendError } from '../utils/response.utils.js';
 import HTTP from '../constants/httpStatus.js';
 
 const notFound = (req, res) => {

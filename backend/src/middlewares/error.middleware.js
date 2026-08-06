@@ -11,7 +11,7 @@
  *  - Unknown / programmer errors    → 500 (message hidden in production)
  */
 
-import { sendError } from '../utils/apiResponse.js';
+import { sendError } from '../utils/response.utils.js';
 import HTTP from '../constants/httpStatus.js';
 import logger from '../utils/logger.js';
 import env from '../config/env.js';

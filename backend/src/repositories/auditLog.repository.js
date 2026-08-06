@@ -1,6 +1,4 @@
-'use strict';
-
-const { pool } = require('../config/db');
+import { pool } from '../config/db.js';
 
 /**
  * Data access layer for the `audit_logs` table.
@@ -17,12 +15,10 @@ const { pool } = require('../config/db');
  * @param {string|null} params.ipAddress - Client IP address
  * @param {string|null} params.userAgent - Client user-agent string
  */
-const log = async ({ userId, action, module, description, ipAddress = null, userAgent = null }) => {
+export const log = async ({ userId, action, module, description, ipAddress = null, userAgent = null }) => {
   await pool.execute(
     `INSERT INTO audit_logs (user_id, action, module, description, ip_address, user_agent, created_at)
      VALUES (?, ?, ?, ?, ?, ?, NOW())`,
     [userId, action, module, description, ipAddress, userAgent]
   );
 };
-
-module.exports = { log };

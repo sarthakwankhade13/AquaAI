@@ -1,23 +1,50 @@
-'use strict';
+import { Router } from 'express';
+import * as authController from '../controllers/auth.controller.js';
+import { verifyJWT } from '../middlewares/auth.middleware.js';
+import { validateFields } from '../middlewares/validation.middleware.js';
+import {
+  loginValidator,
+  sendOtpValidator,
+  verifyOtpValidator,
+  resetPasswordValidator,
+  changePasswordValidator,
+  updateProfileValidator,
+} from '../validators/auth.validator.js';
 
-const express = require('express');
-const router = express.Router();
+const router = Router();
 
-const authController = require('../controllers/auth.controller');
-const { authenticate } = require('../middlewares/auth.middleware');
-const { validate } = require('../middlewares/validate.middleware');
-const { loginValidator, refreshTokenValidator } = require('../validators/auth.validator');
+// ─── Public Endpoints ─────────────────────────────────────────────────────────
 
-// POST /api/v1/auth/login
-router.post('/login', loginValidator, validate, authController.login);
+// Login route
+router.post('/login', loginValidator, validateFields, authController.login);
 
-// POST /api/v1/auth/logout  (protected)
-router.post('/logout', authenticate, authController.logout);
+// Refresh access token route
+router.post('/refresh-token', authController.refresh);
 
-// POST /api/v1/auth/refresh-token
-router.post('/refresh-token', refreshTokenValidator, validate, authController.refreshToken);
+// Forgot Password route (triggers OTP send)
+router.post('/forgot-password', sendOtpValidator, validateFields, authController.sendOtp);
 
-// GET /api/v1/auth/me  (protected)
-router.get('/me', authenticate, authController.getMe);
+// Send OTP route
+router.post('/send-otp', sendOtpValidator, validateFields, authController.sendOtp);
 
-module.exports = router;
+// Verify OTP route
+router.post('/verify-otp', verifyOtpValidator, validateFields, authController.verifyOtp);
+
+// Reset Password route
+router.post('/reset-password', resetPasswordValidator, validateFields, authController.resetPassword);
+
+// ─── Protected Endpoints ──────────────────────────────────────────────────────
+
+// Logout route
+router.post('/logout', verifyJWT, authController.logout);
+
+// Change Password route
+router.post('/change-password', verifyJWT, changePasswordValidator, validateFields, authController.changePassword);
+
+// Get profile details
+router.get('/profile', verifyJWT, authController.getProfile);
+
+// Update profile details
+router.put('/profile', verifyJWT, updateProfileValidator, validateFields, authController.updateProfile);
+
+export default router;

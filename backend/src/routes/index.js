@@ -16,6 +16,7 @@
 
 import { Router } from 'express';
 import healthRoutes from './health.routes.js';
+import authRoutes from './auth.routes.js';
 
 const router = Router();
 
@@ -23,7 +24,7 @@ const router = Router();
 router.use('/health', healthRoutes);
 
 // ─── Feature Routes (added per module) ───────────────────────────────────────
-// router.use('/auth',   authRoutes);   ← Auth module
+router.use('/auth', authRoutes);
 // router.use('/users',  userRoutes);   ← User Management module
 // ... more routes will be uncommented as modules are built
 

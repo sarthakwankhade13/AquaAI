@@ -1,47 +1,80 @@
-'use strict';
-
-const { pool } = require('../config/db');
+import { pool } from '../config/db.js';
 
 /**
  * Data access layer for the `users` table.
- * All queries are parameterised — no string interpolation.
+ * All queries are parameterised to prevent SQL Injection.
  */
 
 /**
- * Finds a user by email address.
- * @param {string} email
- * @returns {object|null} User row or null
+ * Finds a user by mobile number.
+ * @param {string} mobile
+ * @returns {Promise<object|null>} User row or null
  */
-const findByEmail = async (email) => {
+export const findByMobile = async (mobile) => {
   const [rows] = await pool.execute(
-    'SELECT id, name, email, password, role, status, last_login, created_at FROM users WHERE email = ? LIMIT 1',
-    [email]
+    `SELECT u.user_id, u.role_id, r.role_name, u.full_name, u.email, u.mobile, u.password, 
+            u.gender, u.profile_image_url, u.address, u.is_verified, u.is_active, u.last_login 
+     FROM users u
+     INNER JOIN roles r ON u.role_id = r.role_id
+     WHERE u.mobile = ? LIMIT 1`,
+    [mobile]
   );
   return rows[0] || null;
 };
 
 /**
- * Finds a user by primary key.
- * @param {number} id
- * @returns {object|null} User row (password excluded) or null
+ * Finds a user by user_id.
+ * @param {number} userId
+ * @returns {Promise<object|null>} User row (excluding password) or null
  */
-const findById = async (id) => {
+export const findById = async (userId) => {
   const [rows] = await pool.execute(
-    'SELECT id, name, email, role, status, phone, designation, last_login, created_at FROM users WHERE id = ? LIMIT 1',
-    [id]
+    `SELECT u.user_id, u.role_id, r.role_name, u.full_name, u.email, u.mobile, 
+            u.gender, u.profile_image_url, u.address, u.is_verified, u.is_active, u.last_login 
+     FROM users u
+     INNER JOIN roles r ON u.role_id = r.role_id
+     WHERE u.user_id = ? LIMIT 1`,
+    [userId]
   );
   return rows[0] || null;
 };
 
 /**
- * Updates the last_login timestamp after a successful login.
- * @param {number} id
+ * Updates the last login timestamp for a user.
+ * @param {number} userId
+ * @returns {Promise<void>}
  */
-const updateLastLogin = async (id) => {
+export const updateLastLogin = async (userId) => {
   await pool.execute(
-    'UPDATE users SET last_login = NOW() WHERE id = ?',
-    [id]
+    'UPDATE users SET last_login = NOW() WHERE user_id = ?',
+    [userId]
   );
 };
 
-module.exports = { findByEmail, findById, updateLastLogin };
+/**
+ * Updates a user's password.
+ * @param {number} userId
+ * @param {string} hashedPassword
+ * @returns {Promise<void>}
+ */
+export const updatePassword = async (userId, hashedPassword) => {
+  await pool.execute(
+    'UPDATE users SET password = ?, updated_at = NOW() WHERE user_id = ?',
+    [hashedPassword, userId]
+  );
+};
+
+/**
+ * Updates a user's profile details.
+ * @param {number} userId
+ * @param {object} profileData
+ * @returns {Promise<void>}
+ */
+export const updateProfile = async (userId, { fullName, gender, profileImageUrl, address }) => {
+  await pool.execute(
+    `UPDATE users 
+     SET full_name = ?, gender = ?, profile_image_url = ?, address = ?, updated_at = NOW() 
+     WHERE user_id = ?`,
+    [fullName, gender, profileImageUrl, address, userId]
+  );
+};

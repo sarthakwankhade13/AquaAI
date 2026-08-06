@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AquaAI — Smart Water Resource Management & Drought Prediction</title>
+  <!-- Google Fonts - Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="login-container">
+    
+    <!-- LEFT SIDE: Marketing / Information Section -->
+    <div class="info-section">
+      <!-- Water droplet grid background decoration -->
+      <div class="water-mesh"></div>
+      
+      <div class="info-content">
+        <!-- Logo -->
+        <div class="brand-logo">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="url(#dropletGradient)"/>
+            <path d="M12 5v14M8 12h8M9 9l6 6M15 9l-6 6" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+            <defs>
+              <linearGradient id="dropletGradient" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#4cc9f0"/>
+                <stop offset="100%" stop-color="#4895ef"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <span class="brand-name">AquaAI</span>
+        </div>
+        
+        <h1 class="info-title">Smart Water Management & Predictive Analysis</h1>
+        <p class="info-desc">
+          Leveraging artificial intelligence to monitor reservoirs, optimize distribution tankers, and predict regional drought severity indicators in real-time.
+        </p>
+        
+        <!-- Live Dashboard Mockup Container -->
+        <div class="dashboard-mockup">
+          <div class="mockup-header">
+            <span class="mockup-dot red"></span>
+            <span class="mockup-dot yellow"></span>
+            <span class="mockup-dot green"></span>
+            <span class="mockup-title">Water Level & Risk Index</span>
+          </div>
+          <div class="mockup-body">
+            <div class="chart-container">
+              <div class="chart-bars">
+                <div class="bar-wrapper">
+                  <div class="bar" style="height: 80%; background: linear-gradient(180deg, #4cc9f0, #4895ef);"></div>
+                  <span class="bar-label">Reservoir A</span>
+                </div>
+                <div class="bar-wrapper">
+                  <div class="bar" style="height: 45%; background: linear-gradient(180deg, #f72585, #7209b7);"></div>
+                  <span class="bar-label">Reservoir B</span>
+                </div>
+                <div class="bar-wrapper">
+                  <div class="bar" style="height: 65%; background: linear-gradient(180deg, #4cc9f0, #4895ef);"></div>
+                  <span class="bar-label">Reservoir C</span>
+                </div>
+                <div class="bar-wrapper">
+                  <div class="bar" style="height: 30%; background: linear-gradient(180deg, #f72585, #7209b7);"></div>
+                  <span class="bar-label">Reservoir D</span>
+                </div>
+              </div>
+              <div class="chart-info">
+                <div class="info-row">
+                  <span class="dot-indicator blue"></span>
+                  <span class="label">Storage Level: 62%</span>
+                </div>
+                <div class="info-row">
+                  <span class="dot-indicator purple"></span>
+                  <span class="label">Drought Risk: High</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Floating Interactive badges -->
+          <div class="floating-badge badge-1">🛰️ Satellite Feed</div>
+          <div class="floating-badge badge-2">🚨 Sensor Warning</div>
+          <div class="floating-badge badge-3">💧 AI Risk: 92.4%</div>
+          <div class="floating-badge badge-4">🚛 24 Tankers Active</div>
+        </div>
+        
+      </div>
+      <div class="info-footer">
+        © AquaAI 2026. Ministry of Water Resources. All Rights Reserved.
+      </div>
+    </div>
+    
+    <!-- RIGHT SIDE: Authentication Card Section -->
+    <div class="auth-section">
+      
+      <!-- Notification / Toast Container -->
+      <div id="toast-container" class="toast-container"></div>
+      
+      <div class="auth-wrapper">
+        <div class="auth-card" id="auth-card">
+          
+          <!-- ─── STATE 1: LOGIN FORM ─── -->
+          <div class="card-face" id="login-face">
+            <div class="card-header">
+              <div class="card-logo">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" fill="url(#logoGradient)"/>
+                  <defs>
+                    <linearGradient id="logoGradient" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stop-color="#4cc9f0"/>
+                      <stop offset="100%" stop-color="#4895ef"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </div>
+              <h2 class="card-title">Login to AquaAI</h2>
+              <p class="card-subtitle">AI-powered water resource distribution engine</p>
+            </div>
+            
+            <form id="login-form">
+              <!-- Mobile Number -->
+              <div class="form-group">
+                <label for="login-mobile">Mobile Number</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">📞</span>
+                  <input type="text" id="login-mobile" placeholder="Enter 10-digit mobile number" maxlength="10" required autocomplete="username">
+                </div>
+              </div>
+              
+              <!-- Password -->
+              <div class="form-group">
+                <div class="label-row">
+                  <label for="login-password">Password</label>
+                  <a href="#" class="forgot-link" id="goto-forgot">Forgot Password?</a>
+                </div>
+                <div class="input-wrapper">
+                  <span class="input-icon">🔒</span>
+                  <input type="password" id="login-password" placeholder="Enter password" required autocomplete="current-password">
+                  <button type="button" class="password-toggle" id="login-pw-toggle" aria-label="Toggle Password Visibility">👁️</button>
+                </div>
+              </div>
+              
+              <!-- Submit Button -->
+              <button type="submit" class="btn-primary" id="btn-login">
+                <span class="btn-text">Sign In</span>
+                <span class="spinner" id="login-spinner"></span>
+              </button>
+            </form>
+            
+            <!-- Secondary Sign-In channels (Mocked) -->
+            <div class="divider">
+              <span>Or connect with portal gateway</span>
+            </div>
+            <div class="social-login">
+              <button class="btn-social" type="button" onclick="alert('Government single sign-on redirect...')">
+                <img src="https://www.google.com/favicon.ico" alt="Google" width="16" height="16">
+                <span>Google</span>
+              </button>
+              <button class="btn-social" type="button" onclick="alert('National informatics portal redirect...')">
+                <span>🔐 GovSSO</span>
+              </button>
+            </div>
+            
+            <div class="card-footer">
+              Don't have an account? <a href="#" onclick="alert('Citizens and officers register through the respective district management offices.')">Sign Up &rsaquo;</a>
+            </div>
+          </div>
+          
+          <!-- ─── STATE 2: SEND OTP (FORGOT PASSWORD) FORM ─── -->
+          <div class="card-face hidden" id="forgot-face">
+            <div class="card-header">
+              <div class="back-nav">
+                <a href="#" id="back-to-login">&larr; Back to login</a>
+              </div>
+              <h2 class="card-title">Reset Password</h2>
+              <p class="card-subtitle">We will send a 6-digit verification code to your registered mobile number.</p>
+            </div>
+            
+            <form id="forgot-form">
+              <!-- Mobile Number -->
+              <div class="form-group">
+                <label for="forgot-mobile">Mobile Number</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">📞</span>
+                  <input type="text" id="forgot-mobile" placeholder="Enter registered mobile number" maxlength="10" required>
+                </div>
+              </div>
+              
+              <!-- Submit Button -->
+              <button type="submit" class="btn-primary" id="btn-send-otp">
+                <span class="btn-text">Send OTP</span>
+                <span class="spinner" id="send-otp-spinner"></span>
+              </button>
+            </form>
+          </div>
+          
+          <!-- ─── STATE 3: VERIFY OTP & RESET PASSWORD FORM ─── -->
+          <div class="card-face hidden" id="reset-face">
+            <div class="card-header">
+              <div class="back-nav">
+                <a href="#" id="back-to-forgot">&larr; Change mobile number</a>
+              </div>
+              <h2 class="card-title">Enter Verification Code</h2>
+              <p class="card-subtitle">Please check your device. An OTP was dispatched to <strong id="display-otp-mobile"></strong></p>
+            </div>
+            
+            <form id="reset-form">
+              <!-- OTP Code -->
+              <div class="form-group">
+                <label for="reset-otp">6-Digit OTP</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">🔑</span>
+                  <input type="text" id="reset-otp" placeholder="Enter OTP code" maxlength="6" required>
+                </div>
+              </div>
+              
+              <!-- New Password -->
+              <div class="form-group">
+                <label for="reset-new-password">New Password</label>
+                <div class="input-wrapper">
+                  <span class="input-icon">🔒</span>
+                  <input type="password" id="reset-new-password" placeholder="Min 6 characters" required>
+                  <button type="button" class="password-toggle" id="reset-pw-toggle" aria-label="Toggle Password Visibility">👁️</button>
+                </div>
+              </div>
+              
+              <!-- Submit Button -->
+              <button type="submit" class="btn-primary" id="btn-reset">
+                <span class="btn-text">Verify & Update Password</span>
+                <span class="spinner" id="reset-spinner"></span>
+              </button>
+            </form>
+          </div>
+          
+          <!-- ─── STATE 4: LOGGED IN USER INTERACTION DEMO ─── -->
+          <div class="card-face hidden" id="dashboard-face">
+            <div class="card-header">
+              <div class="success-icon">✅</div>
+              <h2 class="card-title">Welcome back, <span id="user-display-name">User</span></h2>
+              <p class="card-subtitle">Logged in as <strong id="user-display-role">WRD_ADMIN</strong></p>
+            </div>
+            
+            <div class="profile-preview-box">
+              <div class="profile-row">
+                <span class="row-label">Email:</span>
+                <span class="row-val" id="profile-email">admin@aquaai.gov.in</span>
+              </div>
+              <div class="profile-row">
+                <span class="row-label">Mobile:</span>
+                <span class="row-val" id="profile-mobile">9876543210</span>
+              </div>
+              <div class="profile-row">
+                <span class="row-label">Gender:</span>
+                <span class="row-val" id="profile-gender">Male</span>
+              </div>
+              <div class="profile-row">
+                <span class="row-label">Address:</span>
+                <span class="row-val" id="profile-address">Civil Lines, Nagpur</span>
+              </div>
+            </div>
+            
+            <button class="btn-danger" id="btn-logout">Logout Session</button>
+          </div>
+          
+        </div>
+      </div>
+      
+      <div class="auth-footer">
+        By signing in, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+      </div>
+    </div>
+    
+  </div>
+  
+  <!-- JavaScript Client Core -->
+  <script src="app.js"></script>
+</body>
+</html>

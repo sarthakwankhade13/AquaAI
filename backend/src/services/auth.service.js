@@ -1,151 +1,326 @@
-'use strict';
-
-const bcrypt = require('bcryptjs');
-const userRepo = require('../repositories/user.repository');
-const refreshTokenRepo = require('../repositories/refreshToken.repository');
-const auditLogRepo = require('../repositories/auditLog.repository');
-const { signAccessToken, signRefreshToken, verifyRefreshToken, expiryToMs } = require('../utils/tokenHelper');
-const jwtConfig = require('../config/jwt');
-const env = require('../config/env');
-const HttpStatus = require('../constants/httpStatus');
+import { AppError } from '../utils/customError.js';
+import { hashPassword, comparePassword } from '../utils/bcrypt.utils.js';
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+  expiryToMs,
+} from '../utils/jwt.utils.js';
+import { generateNumericOtp, getOtpExpiryDate } from '../utils/otp.utils.js';
+import * as authRepo from '../repositories/auth.repository.js';
+import jwtConfig from '../config/jwt.js';
+import HTTP from '../constants/httpStatus.js';
 
 /**
- * Custom operational error class.
- * Errors flagged with isOperational are returned to the client as-is.
+ * Service Layer for the Authentication Module.
  */
-class AppError extends Error {
-  constructor(message, statusCode) {
-    super(message);
-    this.statusCode = statusCode;
-    this.isOperational = true;
-  }
-}
 
 /**
- * Authenticates a user with email and password.
- * Returns signed access + refresh tokens on success.
- * @param {string} email
+ * Log in user using mobile and password.
+ * 
+ * @param {string} mobile
  * @param {string} password
- * @param {object} meta - { ipAddress, userAgent }
- * @returns {{ accessToken, refreshToken, user }}
+ * @param {object} meta - User agent details (ipAddress, deviceInfo, browser, operatingSystem)
+ * @returns {Promise<object>} { accessToken, refreshToken, user }
  */
-const login = async (email, password, meta = {}) => {
-  // 1. Fetch user
-  const user = await userRepo.findByEmail(email);
+export const login = async (mobile, password, meta = {}) => {
+  const user = await authRepo.findUserByMobile(mobile);
+  
   if (!user) {
-    throw new AppError('Invalid email or password', HttpStatus.UNAUTHORIZED);
+    throw new AppError('Invalid mobile number or password', HTTP.UNAUTHORIZED);
   }
 
-  // 2. Check account status
-  if (user.status !== 'active') {
-    throw new AppError('Your account has been deactivated. Contact administrator.', HttpStatus.UNAUTHORIZED);
+  // Check account activity
+  if (!user.is_active) {
+    // Record failed login
+    await authRepo.insertLoginHistory({
+      userId: user.user_id,
+      ipAddress: meta.ipAddress,
+      deviceInfo: meta.deviceInfo,
+      browser: meta.browser,
+      operatingSystem: meta.operatingSystem,
+      loginStatus: 'FAILED',
+    });
+    throw new AppError('Your account has been deactivated. Please contact an administrator.', HTTP.UNAUTHORIZED);
   }
 
-  // 3. Verify password
-  const isMatch = await bcrypt.compare(password, user.password);
+  // Compare passwords
+  const isMatch = await comparePassword(password, user.password);
   if (!isMatch) {
-    throw new AppError('Invalid email or password', HttpStatus.UNAUTHORIZED);
+    // Record failed login
+    await authRepo.insertLoginHistory({
+      userId: user.user_id,
+      ipAddress: meta.ipAddress,
+      deviceInfo: meta.deviceInfo,
+      browser: meta.browser,
+      operatingSystem: meta.operatingSystem,
+      loginStatus: 'FAILED',
+    });
+    throw new AppError('Invalid mobile number or password', HTTP.UNAUTHORIZED);
   }
 
-  // 4. Build token payload (keep it minimal)
-  const payload = { userId: user.id, email: user.email, role: user.role };
+  // Build token payload
+  const tokenPayload = {
+    userId: user.user_id,
+    email: user.email,
+    role: user.role_name,
+  };
 
-  // 5. Sign tokens
-  const accessToken = signAccessToken(payload);
-  const refreshToken = signRefreshToken(payload);
+  // Sign tokens
+  const accessToken = signAccessToken(tokenPayload);
+  const refreshToken = signRefreshToken(tokenPayload);
 
-  // 6. Hash and persist refresh token
-  const hashedRefresh = await bcrypt.hash(refreshToken, env.bcrypt.saltRounds);
+  // Store refresh token
   const expiresAt = new Date(Date.now() + expiryToMs(jwtConfig.refresh.expiresIn));
-  await refreshTokenRepo.save(user.id, hashedRefresh, expiresAt);
+  await authRepo.saveRefreshToken(user.user_id, refreshToken, expiresAt);
 
-  // 7. Update last login timestamp
-  await userRepo.updateLastLogin(user.id);
+  // Update last login timestamp
+  await authRepo.updateUserLastLogin(user.user_id);
 
-  // 8. Write audit log (fire-and-forget — don't block login on log failure)
-  auditLogRepo.log({
-    userId: user.id,
-    action: 'LOGIN',
-    module: 'AUTH',
-    description: `User ${user.email} logged in successfully`,
+  // Record successful login in history
+  await authRepo.insertLoginHistory({
+    userId: user.user_id,
     ipAddress: meta.ipAddress,
-    userAgent: meta.userAgent,
-  }).catch(() => {});
+    deviceInfo: meta.deviceInfo,
+    browser: meta.browser,
+    operatingSystem: meta.operatingSystem,
+    loginStatus: 'SUCCESS',
+  });
 
-  // 9. Return safe user object (no password)
-  const { password: _pw, ...safeUser } = user;
+  // Extract safe user object (omit password)
+  const { password: _, ...safeUser } = user;
 
-  return { accessToken, refreshToken, user: safeUser };
+  return {
+    accessToken,
+    refreshToken,
+    user: safeUser,
+  };
 };
 
 /**
- * Invalidates the user's current refresh token (logout).
+ * Log out user by revoking tokens and recording the event in history.
+ * 
  * @param {number} userId
- * @param {object} meta - { ipAddress, userAgent, email }
+ * @returns {Promise<void>}
  */
-const logout = async (userId, meta = {}) => {
-  await refreshTokenRepo.deleteByUserId(userId);
+export const logout = async (userId) => {
+  // Revoke/Delete refresh tokens
+  await authRepo.deleteRefreshTokensByUserId(userId);
 
-  auditLogRepo.log({
-    userId,
-    action: 'LOGOUT',
-    module: 'AUTH',
-    description: `User ${meta.email || userId} logged out`,
-    ipAddress: meta.ipAddress,
-    userAgent: meta.userAgent,
-  }).catch(() => {});
+  // Update last login history item with logout time
+  await authRepo.updateLoginHistoryLogout(userId);
 };
 
 /**
- * Validates an incoming refresh token and issues a new access token.
+ * Validates a refresh token and returns a new access + rotated refresh token.
+ * 
  * @param {string} incomingRefreshToken
- * @returns {{ accessToken }}
+ * @returns {Promise<object>} { accessToken, refreshToken }
  */
-const refreshAccessToken = async (incomingRefreshToken) => {
-  // 1. Verify JWT signature and expiry
+export const refreshAccessToken = async (incomingRefreshToken) => {
   let decoded;
   try {
     decoded = verifyRefreshToken(incomingRefreshToken);
-  } catch {
-    throw new AppError('Invalid or expired refresh token', HttpStatus.UNAUTHORIZED);
+  } catch (err) {
+    throw new AppError('Invalid or expired refresh token. Please login again.', HTTP.UNAUTHORIZED);
   }
 
-  // 2. Fetch stored token record
-  const stored = await refreshTokenRepo.findByUserId(decoded.userId);
+  // Fetch refresh token record from DB
+  const stored = await authRepo.findRefreshToken(incomingRefreshToken);
   if (!stored) {
-    throw new AppError('Session not found. Please log in again.', HttpStatus.UNAUTHORIZED);
+    throw new AppError('Session not found. Please login again.', HTTP.UNAUTHORIZED);
   }
 
-  // 3. Check DB expiry
+  // Verify if revoked
+  if (stored.is_revoked) {
+    // If a revoked token is presented, suspect reuse hijacking and clear all tokens for the user
+    await authRepo.deleteRefreshTokensByUserId(stored.user_id);
+    throw new AppError('Compromised session. Please login again.', HTTP.UNAUTHORIZED);
+  }
+
+  // Check database expiration
   if (new Date(stored.expires_at) < new Date()) {
-    await refreshTokenRepo.deleteByUserId(decoded.userId);
-    throw new AppError('Refresh token expired. Please log in again.', HttpStatus.UNAUTHORIZED);
+    await authRepo.deleteRefreshTokensByUserId(stored.user_id);
+    throw new AppError('Session expired. Please login again.', HTTP.UNAUTHORIZED);
   }
 
-  // 4. Verify incoming token matches stored hash
-  const isValid = await bcrypt.compare(incomingRefreshToken, stored.token_hash);
-  if (!isValid) {
-    throw new AppError('Invalid refresh token', HttpStatus.UNAUTHORIZED);
+  // Perform rotation: revoke the old refresh token
+  await authRepo.revokeRefreshToken(incomingRefreshToken);
+
+  // Get user details to construct new tokens
+  const user = await authRepo.findUserById(decoded.userId);
+  if (!user || !user.is_active) {
+    throw new AppError('User inactive or not found', HTTP.UNAUTHORIZED);
   }
 
-  // 5. Issue new access token
-  const payload = { userId: decoded.userId, email: decoded.email, role: decoded.role };
-  const accessToken = signAccessToken(payload);
+  const tokenPayload = {
+    userId: user.user_id,
+    email: user.email,
+    role: user.role_name,
+  };
 
-  return { accessToken };
+  // Sign new set of tokens
+  const newAccessToken = signAccessToken(tokenPayload);
+  const newRefreshToken = signRefreshToken(tokenPayload);
+
+  // Save the new refresh token in DB
+  const expiresAt = new Date(Date.now() + expiryToMs(jwtConfig.refresh.expiresIn));
+  await authRepo.saveRefreshToken(user.user_id, newRefreshToken, expiresAt);
+
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  };
 };
 
 /**
- * Retrieves the authenticated user's profile.
- * @param {number} userId
- * @returns {object} User profile (no password)
+ * Generates and saves an OTP to reset password.
+ * 
+ * @param {string} mobile
+ * @returns {Promise<object>} { otpCode, userId }
  */
-const getProfile = async (userId) => {
-  const user = await userRepo.findById(userId);
+export const sendOtp = async (mobile) => {
+  const user = await authRepo.findUserByMobile(mobile);
   if (!user) {
-    throw new AppError('User not found', HttpStatus.NOT_FOUND);
+    throw new AppError('Mobile number is not registered', HTTP.NOT_FOUND);
+  }
+
+  if (!user.is_active) {
+    throw new AppError('User account is deactivated', HTTP.FORBIDDEN);
+  }
+
+  // Generate 6-digit numeric OTP and set expiry (5 minutes validity)
+  const otpCode = generateNumericOtp();
+  const expiresAt = getOtpExpiryDate(5);
+
+  // Save OTP in database
+  await authRepo.insertOtp(user.user_id, otpCode, expiresAt);
+
+  // In a real application, you would trigger SMS gateway API here.
+  // We return the OTP code in response for testing/development.
+  return {
+    otpCode,
+    userId: user.user_id,
+  };
+};
+
+/**
+ * Verifies an OTP code for a given mobile number.
+ * 
+ * @param {string} mobile
+ * @param {string} otpCode
+ * @returns {Promise<boolean>} True if valid
+ */
+export const verifyOtp = async (mobile, otpCode) => {
+  const user = await authRepo.findUserByMobile(mobile);
+  if (!user) {
+    throw new AppError('Mobile number is not registered', HTTP.NOT_FOUND);
+  }
+
+  const activeOtp = await authRepo.findActiveOtp(user.user_id, otpCode);
+  if (!activeOtp) {
+    throw new AppError('Invalid or expired OTP', HTTP.BAD_REQUEST);
+  }
+
+  return true;
+};
+
+/**
+ * Resets a password using OTP verification.
+ * 
+ * @param {string} mobile
+ * @param {string} otpCode
+ * @param {string} newPassword
+ * @returns {Promise<void>}
+ */
+export const resetPassword = async (mobile, otpCode, newPassword) => {
+  const user = await authRepo.findUserByMobile(mobile);
+  if (!user) {
+    throw new AppError('Mobile number is not registered', HTTP.NOT_FOUND);
+  }
+
+  const activeOtp = await authRepo.findActiveOtp(user.user_id, otpCode);
+  if (!activeOtp) {
+    throw new AppError('Invalid or expired OTP', HTTP.BAD_REQUEST);
+  }
+
+  // Mark OTP as used
+  await authRepo.markOtpAsUsed(activeOtp.otp_id);
+
+  // Hash new password and save
+  const hashedPassword = await hashPassword(newPassword);
+  await authRepo.updateUserPassword(user.user_id, hashedPassword);
+
+  // Revoke all existing sessions for the user after password reset for security
+  await authRepo.deleteRefreshTokensByUserId(user.user_id);
+};
+
+/**
+ * Changes password of an authenticated user.
+ * 
+ * @param {number} userId
+ * @param {string} oldPassword
+ * @param {string} newPassword
+ * @returns {Promise<void>}
+ */
+export const changePassword = async (userId, oldPassword, newPassword) => {
+  // Fetch user with password since the standard findUserById omits password
+  const user = await authRepo.findUserByMobile((await authRepo.findUserById(userId)).mobile);
+  if (!user) {
+    throw new AppError('User not found', HTTP.NOT_FOUND);
+  }
+
+  // Verify old password
+  const isMatch = await comparePassword(oldPassword, user.password);
+  if (!isMatch) {
+    throw new AppError('Incorrect current password', HTTP.BAD_REQUEST);
+  }
+
+  // Hash and save new password
+  const hashedPassword = await hashPassword(newPassword);
+  await authRepo.updateUserPassword(userId, hashedPassword);
+
+  // Invalidate refresh tokens on password change to force re-login on other devices
+  await authRepo.deleteRefreshTokensByUserId(userId);
+};
+
+/**
+ * Retrieves the profile details of a user.
+ * 
+ * @param {number} userId
+ * @returns {Promise<object>} User details
+ */
+export const getProfile = async (userId) => {
+  const user = await authRepo.findUserById(userId);
+  if (!user) {
+    throw new AppError('User not found', HTTP.NOT_FOUND);
   }
   return user;
 };
 
-module.exports = { login, logout, refreshAccessToken, getProfile };
+/**
+ * Updates the user's profile details.
+ * 
+ * @param {number} userId
+ * @param {object} updateData - { fullName, gender, profileImageUrl, address }
+ * @returns {Promise<object>} Updated user profile
+ */
+export const updateProfile = async (userId, updateData) => {
+  const user = await authRepo.findUserById(userId);
+  if (!user) {
+    throw new AppError('User not found', HTTP.NOT_FOUND);
+  }
+
+  // Merge updates with existing values to support partial updates
+  const profilePayload = {
+    fullName: updateData.fullName !== undefined ? updateData.fullName : user.full_name,
+    gender: updateData.gender !== undefined ? updateData.gender : user.gender,
+    profileImageUrl: updateData.profileImageUrl !== undefined ? updateData.profileImageUrl : user.profile_image_url,
+    address: updateData.address !== undefined ? updateData.address : user.address,
+  };
+
+  await authRepo.updateUserProfile(userId, profilePayload);
+
+  // Return the freshly updated profile record
+  return authRepo.findUserById(userId);
+};

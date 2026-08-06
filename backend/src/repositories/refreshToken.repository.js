@@ -1,48 +1,57 @@
-'use strict';
-
-const { pool } = require('../config/db');
+import { pool } from '../config/db.js';
 
 /**
  * Data access layer for the `refresh_tokens` table.
- * Tokens are stored hashed; plain tokens never touch the DB.
  */
 
 /**
- * Saves a hashed refresh token for a user session.
- * Deletes any existing token first to enforce single-session per user.
+ * Saves a refresh token for a user session.
+ * Enforces single session per user by deleting existing tokens first.
  * @param {number} userId
- * @param {string} hashedToken - bcrypt hash of the refresh token
- * @param {Date} expiresAt - Token expiry datetime
+ * @param {string} token - The refresh token string
+ * @param {Date} expiresAt - Expiry datetime
+ * @returns {Promise<void>}
  */
-const save = async (userId, hashedToken, expiresAt) => {
+export const save = async (userId, token, expiresAt) => {
   // Enforce single active session per user
   await pool.execute('DELETE FROM refresh_tokens WHERE user_id = ?', [userId]);
 
   await pool.execute(
-    'INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)',
-    [userId, hashedToken, expiresAt]
+    'INSERT INTO refresh_tokens (user_id, refresh_token, expires_at, is_revoked) VALUES (?, ?, ?, 0)',
+    [userId, token, expiresAt]
   );
 };
 
 /**
- * Retrieves the stored refresh token record for a user.
- * @param {number} userId
- * @returns {object|null}
+ * Finds a refresh token record.
+ * @param {string} token
+ * @returns {Promise<object|null>}
  */
-const findByUserId = async (userId) => {
+export const findByToken = async (token) => {
   const [rows] = await pool.execute(
-    'SELECT id, user_id, token_hash, expires_at FROM refresh_tokens WHERE user_id = ? LIMIT 1',
-    [userId]
+    'SELECT token_id, user_id, refresh_token, expires_at, is_revoked, created_at FROM refresh_tokens WHERE refresh_token = ? LIMIT 1',
+    [token]
   );
   return rows[0] || null;
 };
 
 /**
- * Deletes the refresh token for a user (logout / revoke).
- * @param {number} userId
+ * Revokes a specific refresh token.
+ * @param {string} token
+ * @returns {Promise<void>}
  */
-const deleteByUserId = async (userId) => {
-  await pool.execute('DELETE FROM refresh_tokens WHERE user_id = ?', [userId]);
+export const revokeToken = async (token) => {
+  await pool.execute(
+    'UPDATE refresh_tokens SET is_revoked = 1 WHERE refresh_token = ?',
+    [token]
+  );
 };
 
-module.exports = { save, findByUserId, deleteByUserId };
+/**
+ * Deletes all refresh tokens for a user.
+ * @param {number} userId
+ * @returns {Promise<void>}
+ */
+export const deleteByUserId = async (userId) => {
+  await pool.execute('DELETE FROM refresh_tokens WHERE user_id = ?', [userId]);
+};

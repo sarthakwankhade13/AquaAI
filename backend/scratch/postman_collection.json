@@ -1,0 +1,562 @@
+{
+  "info": {
+    "_postman_id": "aquaai-auth-api-collection",
+    "name": "AquaAI Authentication API",
+    "description": "Postman Collection for the AquaAI Authentication Module. Covers all 10 required endpoints including Login, Logout, Refresh Token, OTP flows, Profile management, and password management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mobile\": \"9876543210\",\n  \"password\": \"Admin@123\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "login"
+          ]
+        },
+        "description": "Logs in the user with mobile number and password. Returns access token, refresh token, and user profile information."
+      },
+      "response": [
+        {
+          "name": "Login Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"user_id\": 1,\n      \"role_id\": 1,\n      \"role_name\": \"WRD_ADMIN\",\n      \"full_name\": \"Super Administrator\",\n      \"email\": \"admin@aquaai.gov.in\",\n      \"mobile\": \"9876543210\",\n      \"gender\": \"Male\",\n      \"profile_image_url\": \"https://aquaai.gov.in/profiles/admin.jpg\",\n      \"address\": \"WRD HQ, Nagpur, Maharashtra\",\n      \"is_verified\": 1,\n      \"is_active\": 1,\n      \"last_login\": \"2026-08-06 19:15:00\"\n    }\n  }\n}"
+        },
+        {
+          "name": "Login Failure - Invalid Credentials",
+          "status": "Unauthorized",
+          "code": 401,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"Invalid mobile number or password\"\n}"
+        },
+        {
+          "name": "Login Failure - Validation Error",
+          "status": "Unprocessable Entity",
+          "code": 422,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"Validation failed\",\n  \"errors\": [\n    {\n      \"field\": \"mobile\",\n      \"message\": \"Mobile number must be exactly 10 digits\"\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "Refresh Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/refresh-token",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "refresh-token"
+          ]
+        },
+        "description": "Performs refresh token rotation. Presents the old refresh token and receives a new access token and rotated refresh token."
+      },
+      "response": [
+        {
+          "name": "Refresh Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Token refreshed successfully\",\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n  }\n}"
+        },
+        {
+          "name": "Refresh Failure - Expired Session",
+          "status": "Unauthorized",
+          "code": 401,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"Session expired. Please login again.\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Forgot Password (Send OTP)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mobile\": \"9876543210\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/forgot-password",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "forgot-password"
+          ]
+        },
+        "description": "Triggers password recovery by creating and sending an OTP to the registered mobile number."
+      },
+      "response": [
+        {
+          "name": "OTP Sent Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"OTP sent successfully\",\n  \"data\": {\n    \"otp\": \"592837\"\n  }\n}"
+        },
+        {
+          "name": "OTP Sent Failure - Unregistered Mobile",
+          "status": "Not Found",
+          "code": 404,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"Mobile number is not registered\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Send OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mobile\": \"9876543210\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/send-otp",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "send-otp"
+          ]
+        },
+        "description": "Generates a 6-digit numeric OTP and saves it to verify user ownership."
+      },
+      "response": [
+        {
+          "name": "Send OTP Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"OTP sent successfully\",\n  \"data\": {\n    \"otp\": \"102938\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Verify OTP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"102938\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/verify-otp",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "verify-otp"
+          ]
+        },
+        "description": "Checks if the 6-digit OTP code matches the active OTP in the database and is still valid."
+      },
+      "response": [
+        {
+          "name": "Verify OTP Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"OTP verified successfully\"\n}"
+        },
+        {
+          "name": "Verify OTP Failure - Incorrect/Expired OTP",
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"Invalid or expired OTP\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Reset Password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mobile\": \"9876543210\",\n  \"otp\": \"102938\",\n  \"newPassword\": \"NewAdmin@789\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/reset-password",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "reset-password"
+          ]
+        },
+        "description": "Verifies the OTP one last time, invalidates it, hashes the new password, updates the DB, and revokes all active token sessions."
+      },
+      "response": [
+        {
+          "name": "Reset Password Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Password reset successful\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Change Password",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"oldPassword\": \"Admin@123\",\n  \"newPassword\": \"SuperSecure@987\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/change-password",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "change-password"
+          ]
+        },
+        "description": "Authenticated route. Changes the user's password after verifying the old password."
+      },
+      "response": [
+        {
+          "name": "Change Password Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Password changed successfully. Please login again.\"\n}"
+        },
+        {
+          "name": "Change Password Failure - Incorrect Old Password",
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": false,\n  \"message\": \"Incorrect current password\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get Profile",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/profile",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "profile"
+          ]
+        },
+        "description": "Authenticated route. Returns profile of the logged-in user."
+      },
+      "response": [
+        {
+          "name": "Get Profile Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Profile retrieved successfully\",\n  \"data\": {\n    \"user_id\": 1,\n    \"role_id\": 1,\n    \"role_name\": \"WRD_ADMIN\",\n    \"full_name\": \"Super Administrator\",\n    \"email\": \"admin@aquaai.gov.in\",\n    \"mobile\": \"9876543210\",\n    \"gender\": \"Male\",\n    \"profile_image_url\": \"https://aquaai.gov.in/profiles/admin.jpg\",\n    \"address\": \"WRD HQ, Nagpur, Maharashtra\",\n    \"is_verified\": 1,\n    \"is_active\": 1,\n    \"last_login\": \"2026-08-06 19:15:00\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Update Profile",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fullName\": \"Super Administrator Edited\",\n  \"gender\": \"Male\",\n  \"profileImageUrl\": \"https://aquaai.gov.in/profiles/admin2.jpg\",\n  \"address\": \"WRD HQ Building, Civil Lines, Nagpur\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/profile",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "profile"
+          ]
+        },
+        "description": "Authenticated route. Performs profile update (fullName, gender, profileImageUrl, address)."
+      },
+      "response": [
+        {
+          "name": "Update Profile Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Profile updated successfully\",\n  \"data\": {\n    \"user_id\": 1,\n    \"role_id\": 1,\n    \"role_name\": \"WRD_ADMIN\",\n    \"full_name\": \"Super Administrator Edited\",\n    \"email\": \"admin@aquaai.gov.in\",\n    \"mobile\": \"9876543210\",\n    \"gender\": \"Male\",\n    \"profile_image_url\": \"https://aquaai.gov.in/profiles/admin2.jpg\",\n    \"address\": \"WRD HQ Building, Civil Lines, Nagpur\",\n    \"is_verified\": 1,\n    \"is_active\": 1,\n    \"last_login\": \"2026-08-06 19:15:00\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{accessToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/api/v1/auth/logout",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "auth",
+            "logout"
+          ]
+        },
+        "description": "Authenticated route. Revokes the user session, deletes the refresh token, and updates logout time in the login history."
+      },
+      "response": [
+        {
+          "name": "Logout Success",
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": "{\n  \"success\": true,\n  \"message\": \"Logout successful\"\n}"
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
