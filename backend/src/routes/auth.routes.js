@@ -3,6 +3,7 @@ import * as authController from '../controllers/auth.controller.js';
 import { verifyJWT } from '../middlewares/auth.middleware.js';
 import { validateFields } from '../middlewares/validation.middleware.js';
 import {
+  registerValidator,
   loginValidator,
   sendOtpValidator,
   verifyOtpValidator,
@@ -14,6 +15,9 @@ import {
 const router = Router();
 
 // ─── Public Endpoints ─────────────────────────────────────────────────────────
+
+// Register route
+router.post('/register', registerValidator, validateFields, authController.register);
 
 // Login route
 router.post('/login', loginValidator, validateFields, authController.login);

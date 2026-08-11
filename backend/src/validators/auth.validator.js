@@ -4,6 +4,44 @@ import { body } from 'express-validator';
  * Validation rules for the Authentication module.
  */
 
+export const registerValidator = [
+  body('fullName')
+    .trim()
+    .notEmpty().withMessage('Full name is required')
+    .isLength({ min: 2, max: 120 }).withMessage('Full name must be between 2 and 120 characters'),
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email address is required')
+    .isEmail().withMessage('Please provide a valid email address')
+    .normalizeEmail(),
+  body('mobile')
+    .trim()
+    .notEmpty().withMessage('Mobile number is required')
+    .isNumeric().withMessage('Mobile number must contain digits only')
+    .isLength({ min: 10, max: 10 }).withMessage('Mobile number must be exactly 10 digits'),
+  body('password')
+    .notEmpty().withMessage('Password is required')
+    .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+  body('gender')
+    .notEmpty().withMessage('Gender is required')
+    .isIn(['Male', 'Female', 'Other']).withMessage('Gender must be Male, Female, or Other'),
+  body('roleId')
+    .notEmpty().withMessage('Account type is required')
+    .isInt({ min: 1 }).withMessage('Account type must be a valid role ID'),
+  body('address')
+    .trim()
+    .notEmpty().withMessage('Address is required')
+    .isLength({ max: 500 }).withMessage('Address cannot exceed 500 characters'),
+  body('organization')
+    .optional({ nullable: true, checkFalsy: true })
+    .trim()
+    .isLength({ max: 255 }).withMessage('Organization name cannot exceed 255 characters'),
+  body('designation')
+    .optional({ nullable: true, checkFalsy: true })
+    .trim()
+    .isLength({ max: 255 }).withMessage('Designation cannot exceed 255 characters'),
+];
+
 export const loginValidator = [
   body('mobile')
     .trim()

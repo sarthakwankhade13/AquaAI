@@ -16,6 +16,44 @@ import HTTP from '../constants/httpStatus.js';
  */
 
 /**
+ * Registers a new user account.
+ *
+ * @param {object} userData - { fullName, email, mobile, password, gender, roleId, address }
+ * @returns {Promise<object>} Safe user object (no password)
+ */
+export const register = async ({ fullName, email, mobile, password, gender, roleId, address }) => {
+  // Check for duplicate email
+  const existingEmail = await authRepo.findUserByEmail(email);
+  if (existingEmail) {
+    throw new AppError('An account with this email address already exists.', HTTP.CONFLICT);
+  }
+
+  // Check for duplicate mobile
+  const existingMobile = await authRepo.findUserByMobile(mobile);
+  if (existingMobile) {
+    throw new AppError('An account with this mobile number already exists.', HTTP.CONFLICT);
+  }
+
+  // Hash password before storing
+  const hashedPassword = await hashPassword(password);
+
+  // Persist new user
+  const newUserId = await authRepo.createUser({
+    fullName,
+    email,
+    mobile,
+    hashedPassword,
+    gender,
+    roleId,
+    address,
+  });
+
+  // Return the newly created user (without password)
+  const user = await authRepo.findUserById(newUserId);
+  return user;
+};
+
+/**
  * Log in user using mobile and password.
  * 
  * @param {string} mobile

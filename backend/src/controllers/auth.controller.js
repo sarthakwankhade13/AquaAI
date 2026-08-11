@@ -8,6 +8,25 @@ import HTTP from '../constants/httpStatus.js';
  */
 
 /**
+ * Handle new user registration.
+ */
+export const register = asyncHandler(async (req, res) => {
+  const { fullName, email, mobile, password, gender, roleId, address } = req.body;
+
+  const user = await authService.register({
+    fullName,
+    email,
+    mobile,
+    password,
+    gender,
+    roleId,
+    address,
+  });
+
+  return sendSuccess(res, HTTP.CREATED, 'Account created successfully. You can now log in.', { user });
+});
+
+/**
  * Helper to parse client user-agent details.
  * @param {string} userAgent 
  * @returns {object} { browser, operatingSystem, deviceInfo }

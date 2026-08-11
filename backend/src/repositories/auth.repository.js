@@ -8,6 +8,34 @@ import { pool } from '../config/db.js';
 // ─── User Queries ─────────────────────────────────────────────────────────────
 
 /**
+ * Creates a new user record.
+ * @param {object} userData
+ * @returns {Promise<number>} Newly created user_id
+ */
+export const createUser = async ({ fullName, email, mobile, hashedPassword, gender, roleId, address }) => {
+  const [result] = await pool.execute(
+    `INSERT INTO users 
+     (full_name, email, mobile, password, gender, role_id, address, is_verified, is_active, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1, NOW(), NOW())`,
+    [fullName, email, mobile, hashedPassword, gender, roleId, address]
+  );
+  return result.insertId;
+};
+
+/**
+ * Checks if a user exists by email.
+ * @param {string} email
+ * @returns {Promise<object|null>}
+ */
+export const findUserByEmail = async (email) => {
+  const [rows] = await pool.execute(
+    'SELECT user_id FROM users WHERE email = ? LIMIT 1',
+    [email]
+  );
+  return rows[0] || null;
+};
+
+/**
  * Finds a user by mobile number.
  * @param {string} mobile
  * @returns {Promise<object|null>} User record with role_name or null
