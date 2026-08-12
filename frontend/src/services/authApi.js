@@ -10,30 +10,51 @@ const api = axios.create({
   },
 });
 
+// ─────────────────────────────────────────────
+// Login
+// ─────────────────────────────────────────────
+
 export const loginApi = async (identifier, password) => {
   try {
     const response = await api.post('/login', {
       mobile: identifier,
-      password: password,
+      password,
     });
+
     return response.data;
   } catch (error) {
-    if (error.response && error.response.data) {
-      throw new Error(error.response.data.message || 'Login failed. Please try again.');
+    if (error.response?.data) {
+      throw new Error(
+        error.response.data.message || 'Login failed. Please try again.'
+      );
     }
-    throw new Error('Server unreachable. Please ensure the backend is running.');
+
+    throw new Error(
+      'Server unreachable. Please ensure the backend is running.'
+    );
   }
 };
+
+// ─────────────────────────────────────────────
+// Signup
+// ─────────────────────────────────────────────
 
 export const signupApi = async (payload) => {
   try {
     const response = await api.post('/register', payload);
+
     return response.data;
   } catch (error) {
-    if (error.response && error.response.data) {
-      throw new Error(error.response.data.message || 'Registration failed. Please try again.');
+    if (error.response?.data) {
+      throw new Error(
+        error.response.data.message ||
+        'Registration failed. Please try again.'
+      );
     }
-    throw new Error('Server unreachable. Please ensure the backend is running.');
+
+    throw new Error(
+      'Server unreachable. Please ensure the backend is running.'
+    );
   }
 };
 
