@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   User, Mail, Phone, Lock, Eye, EyeOff, UserCheck,
   MapPin, Building2, Briefcase, Sun, Moon,
-  AlertCircle, CheckCircle2, UserCircle2, LogIn,
+  AlertCircle, CheckCircle2, UserCircle2, LogIn, Building,
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { signupApi } from '../services/authApi';
+import { getDistricts, getTalukasByDistrict, getVillagesByTaluka } from '../services/geographyApi';
 
 // ── Account type options mapped to role_id in the DB ──────────────────────────
 const ACCOUNT_TYPES = [
@@ -26,13 +27,14 @@ const INITIAL_FORM = {
   confirmPassword: '',
   gender:          '',
   accountType:     '',
-  // address fields — composed into a single `address` string on submit
+  districtId:      '',
+  talukaId:        '',
+  villageId:       '',
   address:         '',
-  city:            '',
-  state:           '',
-  country:         '',
+  state:           'Maharashtra',
+  region:          'Vidarbha',
+  country:         'India',
   pinCode:         '',
-  // optional extras stored in profile or ignored if not in DB
   organization:    '',
   designation:     '',
   agreedToTerms:   false,
@@ -47,6 +49,49 @@ export const SignupForm = ({ onSwitchToLogin }) => {
   const [loading,      setLoading]  = useState(false);
   const [errorMsg,     setErrorMsg] = useState('');
   const [successMsg,   setSuccessMsg] = useState('');
+
+  // ── Geography Master Data State ──
+  const [districts, setDistricts] = useState([]);
+  const [talukas,   setTalukas]   = useState([]);
+  const [villages,  setVillages]  = useState([]);
+
+  // Fetch Vidarbha Districts on Mount
+  useEffect(() => {
+    getDistricts().then((res) => {
+      if (res?.success && Array.isArray(res.data)) {
+        setDistricts(res.data);
+      }
+    }).catch(() => {});
+  }, []);
+
+  // Fetch Talukas when District selected
+  useEffect(() => {
+    if (!form.districtId) {
+      setTalukas([]);
+      setVillages([]);
+      setForm((prev) => ({ ...prev, talukaId: '', villageId: '' }));
+      return;
+    }
+    getTalukasByDistrict(form.districtId).then((res) => {
+      if (res?.success && Array.isArray(res.data)) {
+        setTalukas(res.data);
+      }
+    }).catch(() => {});
+  }, [form.districtId]);
+
+  // Fetch Villages when Taluka selected
+  useEffect(() => {
+    if (!form.talukaId) {
+      setVillages([]);
+      setForm((prev) => ({ ...prev, villageId: '' }));
+      return;
+    }
+    getVillagesByTaluka(form.talukaId).then((res) => {
+      if (res?.success && Array.isArray(res.data)) {
+        setVillages(res.data);
+      }
+    }).catch(() => {});
+  }, [form.talukaId]);
 
   // ── Field change handler ─────────────────────────────────────────────────────
   const handleChange = (e) => {
@@ -78,14 +123,12 @@ export const SignupForm = ({ onSwitchToLogin }) => {
       return 'Please select a gender.';
     if (!form.accountType)
       return 'Please select an account type.';
+    if (!form.districtId)
+      return 'Please select your District.';
+    if (!form.talukaId)
+      return 'Please select your Taluka.';
     if (!form.address.trim())
-      return 'Address is required.';
-    if (!form.city.trim())
-      return 'City is required.';
-    if (!form.state.trim())
-      return 'State / Province is required.';
-    if (!form.country.trim())
-      return 'Country is required.';
+      return 'Street / Local Address is required.';
     if (!form.pinCode.trim())
       return 'Pin / Zip code is required.';
     if (!form.agreedToTerms)
@@ -105,13 +148,24 @@ export const SignupForm = ({ onSwitchToLogin }) => {
       return;
     }
 
-    // Compose the full address string (city, state, country, pin appended)
+    const selectedDistObj    = districts.find((d) => String(d.id) === String(form.districtId));
+    const selectedTalukaObj  = talukas.find((t) => String(t.id) === String(form.talukaId));
+    const selectedVillageObj = villages.find((v) => String(v.id) === String(form.villageId));
+
+    const distName    = selectedDistObj?.district_name || '';
+    const talukaName  = selectedTalukaObj?.taluka_name || '';
+    const villageName = selectedVillageObj?.village_name || '';
+
+    // Compose the full geographical address
     const composedAddress = [
       form.address.trim(),
-      form.city.trim(),
-      form.state.trim(),
-      form.country.trim(),
-      form.pinCode.trim(),
+      villageName ? `Village: ${villageName}` : '',
+      talukaName ? `Taluka: ${talukaName}` : '',
+      distName ? `District: ${distName}` : '',
+      'Vidarbha',
+      'Maharashtra',
+      'India',
+      form.pinCode.trim() ? `PIN: ${form.pinCode.trim()}` : '',
     ]
       .filter(Boolean)
       .join(', ');
@@ -415,65 +469,79 @@ export const SignupForm = ({ onSwitchToLogin }) => {
           </div>
         </div>
 
-        {/* ── Row 7: City + State ── */}
+        {/* ── Row 7: Geographical Master Selectors (District & Taluka) ── */}
         <div className="form-row-2col">
           <div className="form-group">
-            <label className="form-label" htmlFor="su_city">
-              City <span className="req-star">*</span>
+            <label className="form-label" htmlFor="su_district">
+              District (Vidarbha) <span className="req-star">*</span>
             </label>
             <div className="input-with-icon">
               <span className="input-icon-prefix"><MapPin size={17} /></span>
-              <input
-                id="su_city"
-                name="city"
-                type="text"
-                className="input-field"
-                placeholder="Enter your city"
-                value={form.city}
+              <select
+                id="su_district"
+                name="districtId"
+                className="input-field select-field"
+                value={form.districtId}
                 onChange={handleChange}
-                autoComplete="address-level2"
-              />
+              >
+                <option value="">Select District</option>
+                {districts.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.district_name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label" htmlFor="su_state">
-              State / Province <span className="req-star">*</span>
+            <label className="form-label" htmlFor="su_taluka">
+              Taluka / Sub-District <span className="req-star">*</span>
             </label>
             <div className="input-with-icon">
-              <span className="input-icon-prefix"><MapPin size={17} /></span>
-              <input
-                id="su_state"
-                name="state"
-                type="text"
-                className="input-field"
-                placeholder="Enter your state or province"
-                value={form.state}
+              <span className="input-icon-prefix"><Building size={17} /></span>
+              <select
+                id="su_taluka"
+                name="talukaId"
+                className="input-field select-field"
+                value={form.talukaId}
                 onChange={handleChange}
-                autoComplete="address-level1"
-              />
+                disabled={!form.districtId}
+              >
+                <option value="">-- Select Taluka --</option>
+                {talukas.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.taluka_name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
 
-        {/* ── Row 8: Country + Pin Code ── */}
+        {/* ── Row 8: Village & Pin Code ── */}
         <div className="form-row-2col">
           <div className="form-group">
-            <label className="form-label" htmlFor="su_country">
-              Country <span className="req-star">*</span>
+            <label className="form-label" htmlFor="su_village">
+              Village / Gram Panchayat <span className="optional-tag"> (Optional)</span>
             </label>
             <div className="input-with-icon">
               <span className="input-icon-prefix"><MapPin size={17} /></span>
-              <input
-                id="su_country"
-                name="country"
-                type="text"
-                className="input-field"
-                placeholder="Enter your country"
-                value={form.country}
+              <select
+                id="su_village"
+                name="villageId"
+                className="input-field select-field"
+                value={form.villageId}
                 onChange={handleChange}
-                autoComplete="country-name"
-              />
+                disabled={!form.talukaId}
+              >
+                <option value="">-- Select Village --</option>
+                {villages.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.village_name} {v.village_local_name ? `(${v.village_local_name})` : ''}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

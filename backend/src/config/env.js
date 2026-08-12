@@ -57,6 +57,22 @@ const env = {
     origin: _optional('CORS_ORIGIN', 'http://localhost:3000'),
   },
 
+  // ─── Maharashtra Government Geography API ────────────────────
+  geo: {
+    districtApiUrl : _optional('MH_DISTRICT_API_URL', 'https://pmkapi.maharashtra.gov.in/api/MH/District/GetKeyValuePair'),
+    talukaApiUrl   : _optional('MH_TALUKA_API_URL',   'https://pmkapi.maharashtra.gov.in/api/MH/Taluka/GetList'),
+    villageApiUrl  : _optional('MH_VILLAGE_API_URL',  'http://115.124.105.220/API/GetVillagesOfDistrictAndTaluka'),
+    stateCode      : _optional('MH_STATE_CODE',       '27'),
+    timeoutMs      : parseInt(_optional('MH_API_TIMEOUT_MS', '15000'), 10),
+  },
+
+  // ─── Open-Meteo Weather API (free, no key required) ──────────
+  weather: {
+    apiUrl       : _optional('OPEN_METEO_API_URL',       'https://api.open-meteo.com/v1/forecast'),
+    timeoutMs    : parseInt(_optional('OPEN_METEO_TIMEOUT_MS',      '10000'), 10),
+    cacheTtlMins : parseInt(_optional('WEATHER_CACHE_TTL_MINUTES',  '30'),    10),
+  },
+
   // ─── Helpers ─────────────────────────────────────────────────
   get isDev()  { return this.NODE_ENV === 'development'; },
   get isProd() { return this.NODE_ENV === 'production';  },

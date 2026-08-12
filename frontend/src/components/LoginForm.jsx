@@ -45,6 +45,8 @@ export const LoginForm = () => {
       if (res.data?.accessToken) {
         localStorage.setItem('accessToken', res.data.accessToken);
       }
+      // Redirect to admin dashboard after login
+      setTimeout(() => navigate('/admin/dashboard'), 800);
     } catch (err) {
       setErrorMessage(err.message || 'Invalid credentials.');
     } finally {

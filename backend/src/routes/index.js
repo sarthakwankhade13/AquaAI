@@ -5,27 +5,27 @@
  * This file is the single import point for app.js.
  *
  * Current routes:
- *   /api/v1/health  → health check
- *
- * Future routes will be added as each feature is built:
- *   /api/v1/auth    → Authentication
- *   /api/v1/users   → User Management
- *   /api/v1/env     → Environmental Monitoring
- *   ... etc
+ *   /api/v1/health    → health check
+ *   /api/v1/auth      → Authentication
+ *   /api/v1/          → Geography master data
+ *   /api/v1/weather   → Weather data (Open-Meteo backed)
  */
 
 import { Router } from 'express';
-import healthRoutes from './health.routes.js';
-import authRoutes from './auth.routes.js';
+import healthRoutes    from './health.routes.js';
+import authRoutes      from './auth.routes.js';
+import geographyRoutes from './geography.routes.js';
+import weatherRoutes   from './weather.routes.js';
 
 const router = Router();
 
 // ─── Foundation Routes ────────────────────────────────────────────────────────
 router.use('/health', healthRoutes);
 
-// ─── Feature Routes (added per module) ───────────────────────────────────────
-router.use('/auth', authRoutes);
-// router.use('/users',  userRoutes);   ← User Management module
-// ... more routes will be uncommented as modules are built
+// ─── Feature Routes ───────────────────────────────────────────────────────────
+router.use('/auth',    authRoutes);
+router.use('/',        geographyRoutes);
+router.use('/weather', weatherRoutes);
 
 export default router;
+
