@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, Lock, Eye, EyeOff, LogIn, Sun, Moon, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, LogIn, Sun, Moon, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { loginApi } from '../services/authApi';
@@ -7,12 +7,12 @@ import { loginApi } from '../services/authApi';
 export const LoginForm = () => {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  
-  const [mobile, setMobile] = useState('');
+
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  
+
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -22,13 +22,13 @@ export const LoginForm = () => {
     setErrorMessage('');
     setSuccessMessage('');
 
-    if (!mobile.trim()) {
-      setErrorMessage('Please enter your mobile number.');
+    if (!email.trim()) {
+      setErrorMessage('Please enter your email address.');
       return;
     }
 
-    if (!/^\d{10}$/.test(mobile.trim())) {
-      setErrorMessage('Mobile number must be exactly 10 digits.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setErrorMessage('Please enter a valid email address.');
       return;
     }
 
@@ -39,14 +39,38 @@ export const LoginForm = () => {
 
     try {
       setLoading(true);
-      const res = await loginApi(mobile.trim(), password);
+      const res = await loginApi(email.trim(), password);
       setSuccessMessage(res.message || 'Login successful! Redirecting...');
-      
+
       if (res.data?.accessToken) {
         localStorage.setItem('accessToken', res.data.accessToken);
       }
+
+      if (res.data?.user) {
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+      }
+
+      if (res.data?.user) {
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+      }
       // Redirect to admin dashboard after login
-      setTimeout(() => navigate('/admin/dashboard'), 800);
+      // Role-based redirect (WRD_ADMIN, DISTRICT_ADMIN, SUPER_ADMIN, etc.)
+      const role = res.data?.user?.role_name || '';
+
+      setTimeout(() => {
+        switch (role) {
+          case 'WRD_ADMIN':
+          case 'SUPER_ADMIN':
+          case 'DISTRICT_ADMIN':
+            navigate('/admin/dashboard');
+            break;
+
+          default:
+            // Fallback for administrative/other roles to access main dashboard
+            navigate('/admin/dashboard');
+            break;
+        }
+      }, 800);
     } catch (err) {
       setErrorMessage(err.message || 'Invalid credentials.');
     } finally {
@@ -94,26 +118,23 @@ export const LoginForm = () => {
         )}
 
         <form onSubmit={handleSubmit} className="login-form">
-          {/* Mobile Number Field */}
+          {/* Email Field */}
           <div className="form-group">
-            <label className="form-label" htmlFor="mobileInput">
-              Mobile Number
+            <label className="form-label" htmlFor="emailInput">
+              Email Address
             </label>
             <div className="input-with-icon">
               <span className="input-icon-prefix">
-                <Phone size={18} />
+                <Mail size={18} />
               </span>
               <input
-                id="mobileInput"
-                type="tel"
-                inputMode="numeric"
-                pattern="\d{10}"
-                maxLength={10}
+                id="emailInput"
+                type="email"
                 className="input-field"
-                placeholder="Enter your 10-digit mobile number"
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
-                autoComplete="tel"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
               />
             </div>
           </div>

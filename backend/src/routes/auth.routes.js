@@ -16,6 +16,9 @@ const router = Router();
 
 // ─── Public Endpoints ─────────────────────────────────────────────────────────
 
+// Get available roles for signup/registration
+router.get('/roles', authController.getAvailableRoles);
+
 // Register route
 router.post('/register', registerValidator, validateFields, authController.register);
 

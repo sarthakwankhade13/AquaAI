@@ -29,9 +29,10 @@ export const registerValidator = [
     .notEmpty().withMessage('Account type is required')
     .isInt({ min: 1 }).withMessage('Account type must be a valid role ID'),
   body('address')
+    .optional({ nullable: true, checkFalsy: true })
     .trim()
-    .notEmpty().withMessage('Address is required')
-    .isLength({ max: 500 }).withMessage('Address cannot exceed 500 characters'),
+    .isLength({ max: 500 })
+    .withMessage('Address cannot exceed 500 characters'),
   body('organization')
     .optional({ nullable: true, checkFalsy: true })
     .trim()
@@ -43,11 +44,11 @@ export const registerValidator = [
 ];
 
 export const loginValidator = [
-  body('mobile')
+  body('email')
     .trim()
-    .notEmpty().withMessage('Mobile number is required')
-    .isNumeric().withMessage('Mobile number must contain digits only')
-    .isLength({ min: 10, max: 10 }).withMessage('Mobile number must be exactly 10 digits'),
+    .notEmpty().withMessage('Email address is required')
+    .isEmail().withMessage('Please provide a valid email address')
+    .normalizeEmail(),
   body('password')
     .notEmpty().withMessage('Password is required')
 ];

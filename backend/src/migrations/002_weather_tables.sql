@@ -4,25 +4,7 @@
 --  Run this after 001_geography_tables.sql
 -- ============================================================
 
--- ── Add lat/lng coordinates to villages (safe stored procedure) ─
-DROP PROCEDURE IF EXISTS _add_village_coords;
-DELIMITER $$
-CREATE PROCEDURE _add_village_coords()
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-      AND TABLE_NAME   = 'villages'
-      AND COLUMN_NAME  = 'latitude'
-  ) THEN
-    ALTER TABLE villages
-      ADD COLUMN latitude  DECIMAL(10,8) NULL AFTER village_local_name,
-      ADD COLUMN longitude DECIMAL(11,8) NULL AFTER latitude;
-  END IF;
-END$$
-DELIMITER ;
-CALL _add_village_coords();
-DROP PROCEDURE IF EXISTS _add_village_coords;
+-- Note: latitude and longitude columns should be added to villages table separately if needed
 
 -- ── District coordinate centroids (lookup table) ─────────────
 CREATE TABLE IF NOT EXISTS district_coordinates (

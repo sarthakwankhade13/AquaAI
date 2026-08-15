@@ -13,30 +13,35 @@ import {
   getVillageById,
   getVillages,
   syncGeography,
+  validateGeography,
 } from '../controllers/geography.controller.js';
 import { verifyJWT, authorizeRoles } from '../middlewares/auth.middleware.js';
 import ROLES from '../constants/roles.js';
 
 const router = Router();
 
-// ─── Public / Authenticated Geography Master-Data Queries ──────────────────
-router.get('/districts', getAllDistricts);
-router.get('/districts/:districtId', getDistrictById);
-router.get('/districts/:districtId/talukas', getTalukasByDistrict);
+// ─── Public Geography Master-Data Queries ──────────────────────
+router.get('/districts',                      getAllDistricts);
+router.get('/districts/:districtId',          getDistrictById);
+router.get('/districts/:districtId/talukas',  getTalukasByDistrict);
+router.get('/talukas/:talukaId',              getTalukaById);
+router.get('/talukas/:talukaId/villages',     getVillagesByTaluka);
+router.get('/villages',                       getVillages);
+router.get('/villages/:villageId',            getVillageById);
 
-router.get('/talukas/:talukaId', getTalukaById);
-router.get('/talukas/:talukaId/villages', getVillagesByTaluka);
-
-router.get('/villages', getVillages);
-router.get('/villages/:villageId', getVillageById);
-
-// ─── Protected Admin Synchronization Endpoint ─────────────────────────────
-// POST /api/v1/admin/geography/sync
+// ─── Protected Admin Endpoints ─────────────────────────────────
 router.post(
   '/admin/geography/sync',
   verifyJWT,
   authorizeRoles(ROLES.WRD_ADMIN),
   syncGeography
+);
+
+router.get(
+  '/admin/geography/validate',
+  verifyJWT,
+  authorizeRoles(ROLES.WRD_ADMIN),
+  validateGeography
 );
 
 export default router;

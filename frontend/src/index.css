@@ -82,7 +82,7 @@ body {
   background-color: var(--bg-card);
   border-radius: 24px;
   box-shadow: var(--shadow-lg);
-  overflow: hidden;
+  clip-path: inset(0 round 24px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   margin: auto;
 }
@@ -642,8 +642,11 @@ body {
 .signup-panel {
   padding: 2.25rem 3rem;
   overflow-y: auto;
+  overflow-x: hidden;
   justify-content: flex-start;
   gap: 0;
+  max-height: 100vh;
+  border-radius: 0 24px 24px 0;
 }
 
 /* Header avatar + titles */

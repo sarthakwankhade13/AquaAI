@@ -54,18 +54,18 @@ export const register = async ({ fullName, email, mobile, password, gender, role
 };
 
 /**
- * Log in user using mobile and password.
+ * Log in user using email and password.
  * 
- * @param {string} mobile
+ * @param {string} email
  * @param {string} password
  * @param {object} meta - User agent details (ipAddress, deviceInfo, browser, operatingSystem)
  * @returns {Promise<object>} { accessToken, refreshToken, user }
  */
-export const login = async (mobile, password, meta = {}) => {
-  const user = await authRepo.findUserByMobile(mobile);
+export const login = async (email, password, meta = {}) => {
+  const user = await authRepo.findUserByEmail(email);
   
   if (!user) {
-    throw new AppError('Invalid mobile number or password', HTTP.UNAUTHORIZED);
+    throw new AppError('Invalid email or password', HTTP.UNAUTHORIZED);
   }
 
   // Check account activity
@@ -94,7 +94,7 @@ export const login = async (mobile, password, meta = {}) => {
       operatingSystem: meta.operatingSystem,
       loginStatus: 'FAILED',
     });
-    throw new AppError('Invalid mobile number or password', HTTP.UNAUTHORIZED);
+    throw new AppError('Invalid email or password', HTTP.UNAUTHORIZED);
   }
 
   // Build token payload

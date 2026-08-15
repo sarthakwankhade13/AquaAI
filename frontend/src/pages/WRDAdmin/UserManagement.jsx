@@ -58,8 +58,15 @@ const ROLE_COLORS = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const formatRoleName = (roleName) => {
+  // If role name is already space-separated (from database), just return it
+  if (roleName && roleName.includes(' ')) {
+    return roleName;
+  }
+
+  // Handle underscore-separated role names
   const roleLabels = {
     wrd_admin: 'WRD Super Admin',
+    wrd_super_admin: 'WRD Super Admin',
     operator: 'Operator',
     citizen: 'Citizen',
     tanker_driver: 'Tanker Driver',
@@ -70,6 +77,7 @@ const formatRoleName = (roleName) => {
     return roleLabels[roleName];
   }
 
+  // Fallback: convert underscores to spaces and capitalize
   return String(roleName || '')
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (char) => char.toUpperCase());

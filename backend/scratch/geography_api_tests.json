@@ -1,0 +1,153 @@
+{
+  "info": {
+    "name": "AquaAI — Geography Master Data APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",    "value": "http://localhost:5000/api/v1" },
+    { "key": "accessToken", "value": "" },
+    { "key": "districtId",  "value": "1" },
+    { "key": "talukaId",    "value": "1" },
+    { "key": "villageId",   "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth — Login (get token)",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/auth/login",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"mobile\": \"9876543210\",\n  \"password\": \"your_password\"\n}"
+        }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "exec": [
+            "const json = pm.response.json();",
+            "if (json.data && json.data.accessToken) {",
+            "  pm.collectionVariables.set('accessToken', json.data.accessToken);",
+            "}"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "2. GET All Districts",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/districts",
+        "header": []
+      }
+    },
+    {
+      "name": "3. GET District by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/districts/{{districtId}}",
+        "header": []
+      }
+    },
+    {
+      "name": "4. GET Talukas by District",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/districts/{{districtId}}/talukas",
+        "header": []
+      }
+    },
+    {
+      "name": "5. GET Taluka by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/talukas/{{talukaId}}",
+        "header": []
+      }
+    },
+    {
+      "name": "6. GET Villages by Taluka",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/talukas/{{talukaId}}/villages",
+        "header": []
+      }
+    },
+    {
+      "name": "7. GET Village by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/villages/{{villageId}}",
+        "header": []
+      }
+    },
+    {
+      "name": "8. GET Villages — filter by district_id",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/villages?district_id={{districtId}}",
+          "query": [{ "key": "district_id", "value": "{{districtId}}" }]
+        },
+        "header": []
+      }
+    },
+    {
+      "name": "9. GET Villages — search by name",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/villages?search=Nagpur",
+          "query": [{ "key": "search", "value": "Nagpur" }]
+        },
+        "header": []
+      }
+    },
+    {
+      "name": "10. POST Admin Sync (WRD_ADMIN only)",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/admin/geography/sync",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+          { "key": "Content-Type",  "value": "application/json" }
+        ]
+      }
+    },
+    {
+      "name": "11. GET Admin Validate",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/admin/geography/validate",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ]
+      }
+    },
+    {
+      "name": "12. POST Admin Sync — Unauthorized (no token)",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/admin/geography/sync",
+        "header": []
+      }
+    },
+    {
+      "name": "13. GET Invalid District ID",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/districts/99999",
+        "header": []
+      }
+    },
+    {
+      "name": "14. GET Invalid Taluka ID",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/talukas/99999",
+        "header": []
+      }
+    }
+  ]
+}

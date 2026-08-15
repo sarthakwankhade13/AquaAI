@@ -18,6 +18,7 @@ import UserManagement from './pages/WRDAdmin/UserManagement';
 import AuditLogs from './pages/WRDAdmin/AuditLogs';
 import Settings from './pages/WRDAdmin/Settings';
 import Profile from './pages/WRDAdmin/Profile';
+import GeographyManagement from './pages/WRDAdmin/GeographyManagement';
 import GeographyMaster from './pages/WRDAdmin/GeographyMaster';
 
 function App() {
@@ -42,7 +43,7 @@ function App() {
         <Route path="/admin/water-distribution" element={<ProtectedRoute><WaterDistribution /></ProtectedRoute>} />
         <Route path="/admin/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
         <Route path="/admin/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
-        <Route path="/admin/geography" element={<ProtectedRoute><GeographyMaster /></ProtectedRoute>} />
+        <Route path="/admin/geography" element={<ProtectedRoute><GeographyManagement /></ProtectedRoute>} />
         <Route path="/admin/user-management" element={<ProtectedRoute><UserManagement /></ProtectedRoute>} />
         <Route path="/admin/audit-logs" element={<ProtectedRoute><AuditLogs /></ProtectedRoute>} />
         <Route path="/admin/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />

@@ -2,10 +2,20 @@ import * as authService from '../services/auth.service.js';
 import { sendSuccess } from '../utils/response.utils.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import HTTP from '../constants/httpStatus.js';
+import * as userService from '../services/user.service.js';
 
 /**
  * Controller Layer for the Authentication Module.
  */
+
+/**
+ * Get available roles for signup form (public endpoint).
+ */
+export const getAvailableRoles = asyncHandler(async (req, res) => {
+  const roles = await userService.listRoles();
+
+  return sendSuccess(res, HTTP.OK, 'Roles fetched successfully', roles);
+});
 
 /**
  * Handle new user registration.
@@ -64,7 +74,7 @@ const parseUserAgent = (userAgent = '') => {
  * Handle user login.
  */
 export const login = asyncHandler(async (req, res) => {
-  const { mobile, password } = req.body;
+  const { email, password } = req.body;
 
   // Extract client metadata for login history
   const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
@@ -78,7 +88,7 @@ export const login = asyncHandler(async (req, res) => {
     deviceInfo,
   };
 
-  const result = await authService.login(mobile, password, meta);
+  const result = await authService.login(email, password, meta);
 
   // Set HTTP-only cookie for secure refresh token storage
   res.cookie('refreshToken', result.refreshToken, {

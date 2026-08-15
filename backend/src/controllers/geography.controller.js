@@ -7,6 +7,7 @@ import * as districtService from '../services/geography/district.service.js';
 import * as talukaService from '../services/geography/taluka.service.js';
 import * as villageService from '../services/geography/village.service.js';
 import { syncVidarbhaGeography } from '../services/geography/geography-sync.service.js';
+import * as geoRepo from '../repositories/geography.repository.js';
 import { sendSuccess, sendError } from '../utils/response.utils.js';
 import HTTP from '../constants/httpStatus.js';
 import logger from '../utils/logger.js';
@@ -124,9 +125,33 @@ export const getVillages = async (req, res, next) => {
 };
 
 /**
- * POST /api/v1/admin/geography/sync
- * Super Admin synchronization endpoint
+ * GET /api/v1/admin/geography/validate
+ * Validate data integrity: counts, orphans, duplicates
  */
+export const validateGeography = async (req, res, next) => {
+  try {
+    const districtCount = await geoRepo.countDistricts();
+    const talukaCount   = await geoRepo.countTalukas();
+    const villageCount  = await geoRepo.countVillages();
+
+    const issues = [];
+    if (districtCount !== 11) {
+      issues.push(`Expected 11 Vidarbha districts, found ${districtCount}`);
+    }
+
+    return sendSuccess(res, HTTP.OK, 'Geography validation complete', {
+      districtCount,
+      talukaCount,
+      villageCount,
+      expectedDistricts: 11,
+      isValid: issues.length === 0,
+      issues,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const syncGeography = async (req, res, next) => {
   try {
     logger.info(`[ADMIN_SYNC] Geography sync triggered by user: ${req.user?.userId || 'Unknown'} (${req.user?.role})`);

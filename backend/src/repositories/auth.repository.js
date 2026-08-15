@@ -12,24 +12,57 @@ import { pool } from '../config/db.js';
  * @param {object} userData
  * @returns {Promise<number>} Newly created user_id
  */
-export const createUser = async ({ fullName, email, mobile, hashedPassword, gender, roleId, address }) => {
+export const createUser = async ({
+  fullName,
+  email,
+  mobile,
+  hashedPassword,
+  gender,
+  roleId,
+  address = null,
+}) => {
   const [result] = await pool.execute(
     `INSERT INTO users 
-     (full_name, email, mobile, password, gender, role_id, address, is_verified, is_active, created_at, updated_at)
+     (
+       full_name,
+       email,
+       mobile,
+       password,
+       gender,
+       role_id,
+       address,
+       is_verified,
+       is_active,
+       created_at,
+       updated_at
+     )
      VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1, NOW(), NOW())`,
-    [fullName, email, mobile, hashedPassword, gender, roleId, address]
+    [
+      fullName ?? null,
+      email ?? null,
+      mobile ?? null,
+      hashedPassword ?? null,
+      gender ?? null,
+      roleId ?? null,
+      address ?? null,
+    ]
   );
+
   return result.insertId;
 };
 
 /**
- * Checks if a user exists by email.
+ * Finds a user by email with full details.
  * @param {string} email
- * @returns {Promise<object|null>}
+ * @returns {Promise<object|null>} User record with role_name or null
  */
 export const findUserByEmail = async (email) => {
   const [rows] = await pool.execute(
-    'SELECT user_id FROM users WHERE email = ? LIMIT 1',
+    `SELECT u.user_id, u.role_id, r.role_name, u.full_name, u.email, u.mobile, u.password, 
+            u.gender, u.profile_image_url, u.address, u.is_verified, u.is_active, u.last_login 
+     FROM users u
+     INNER JOIN roles r ON u.role_id = r.role_id
+     WHERE u.email = ? LIMIT 1`,
     [email]
   );
   return rows[0] || null;
@@ -100,12 +133,21 @@ export const updateUserPassword = async (userId, hashedPassword) => {
  * @param {object} profileDetails
  * @returns {Promise<void>}
  */
-export const updateUserProfile = async (userId, { fullName, gender, profileImageUrl, address }) => {
+export const updateUserProfile = async (
+  userId,
+  { fullName, gender, profileImageUrl, address }
+) => {
   await pool.execute(
     `UPDATE users 
      SET full_name = ?, gender = ?, profile_image_url = ?, address = ?, updated_at = NOW() 
      WHERE user_id = ?`,
-    [fullName, gender, profileImageUrl, address, userId]
+    [
+      fullName ?? null,
+      gender ?? null,
+      profileImageUrl ?? null,
+      address ?? null,
+      userId,
+    ]
   );
 };
 
@@ -119,7 +161,10 @@ export const updateUserProfile = async (userId, { fullName, gender, profileImage
  * @returns {Promise<void>}
  */
 export const saveRefreshToken = async (userId, token, expiresAt) => {
-  await pool.execute('DELETE FROM refresh_tokens WHERE user_id = ?', [userId]);
+  await pool.execute(
+    'DELETE FROM refresh_tokens WHERE user_id = ?',
+    [userId]
+  );
 
   await pool.execute(
     'INSERT INTO refresh_tokens (user_id, refresh_token, expires_at, is_revoked) VALUES (?, ?, ?, 0)',
@@ -158,22 +203,39 @@ export const revokeRefreshToken = async (token) => {
  * @returns {Promise<void>}
  */
 export const deleteRefreshTokensByUserId = async (userId) => {
-  await pool.execute('DELETE FROM refresh_tokens WHERE user_id = ?', [userId]);
+  await pool.execute(
+    'DELETE FROM refresh_tokens WHERE user_id = ?',
+    [userId]
+  );
 };
 
-// ─── Login History Queries ───────────────────────────────────────────────────
+// ─── Login History Queries ────────────────────────────────────────────────────
 
 /**
  * Inserts a login attempt record.
  * @param {object} params
  * @returns {Promise<void>}
  */
-export const insertLoginHistory = async ({ userId, ipAddress, deviceInfo, browser, operatingSystem, loginStatus }) => {
+export const insertLoginHistory = async ({
+  userId,
+  ipAddress,
+  deviceInfo,
+  browser,
+  operatingSystem,
+  loginStatus,
+}) => {
   await pool.execute(
     `INSERT INTO login_history 
      (user_id, login_time, ip_address, device_info, browser, operating_system, login_status, created_at)
      VALUES (?, NOW(), ?, ?, ?, ?, ?, NOW())`,
-    [userId, ipAddress, deviceInfo, browser, operatingSystem, loginStatus]
+    [
+      userId,
+      ipAddress ?? null,
+      deviceInfo ?? null,
+      browser ?? null,
+      operatingSystem ?? null,
+      loginStatus ?? null,
+    ]
   );
 };
 

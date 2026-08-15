@@ -14,6 +14,7 @@
 import './config/env.js';             // Validate env vars immediately
 import app          from './app.js';
 import { connectDB } from './config/db.js';
+import { runMigrations } from './config/runMigrations.js';
 import logger        from './utils/logger.js';
 import serverConfig  from './config/server.js';
 
@@ -25,7 +26,10 @@ const startServer = async () => {
     // Step 1: Verify DB connectivity before accepting any traffic
     await connectDB();
 
-    // Step 2: Start HTTP server
+    // Step 2: Run SQL migrations (idempotent — safe every restart)
+    await runMigrations();
+
+    // Step 3: Start HTTP server
     const server = app.listen(PORT, serverConfig.host, () => {
       logger.info(`┌─────────────────────────────────────────────────┐`);
       logger.info(`│  AquaAI API Server                              │`);
