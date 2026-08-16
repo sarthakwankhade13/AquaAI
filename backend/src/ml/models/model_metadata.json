@@ -1,0 +1,370 @@
+{
+  "training_date": "2026-08-16T22:34:19.823008",
+  "dataset_file": "rainfall_vidarbha_filtered.csv",
+  "dataset_version": "1.0",
+  "target_definition": {
+    "method": "SPI-3 (3-month Standardized Precipitation Index)",
+    "threshold": -1.0,
+    "label_0": "No Drought (SPI-3 >= threshold)",
+    "label_1": "Drought    (SPI-3 <  threshold)",
+    "rationale": "Only rainfall data available. SPI-3 selected for 3.5-year dataset.",
+    "limitation": "Short baseline (3.5 yrs) may affect SPI reliability. Treat predictions with caution."
+  },
+  "features": [
+    "rainfall_mm",
+    "rain_7d",
+    "rain_14d",
+    "rain_30d",
+    "rain_60d",
+    "rain_7d_ma",
+    "rain_30d_ma",
+    "rain_lag1",
+    "rain_lag3",
+    "rain_lag7",
+    "rain_lag14",
+    "rain_lag30",
+    "rain_anomaly",
+    "cumulative_seasonal",
+    "spi_3",
+    "month",
+    "year",
+    "day_of_year",
+    "season",
+    "latitude",
+    "longitude",
+    "district_enc",
+    "tehsil_enc"
+  ],
+  "split_info": {
+    "train_end_date": "2023-09-13",
+    "val_end_date": "2024-06-07",
+    "train_rows": 47310,
+    "val_rows": 10112,
+    "test_rows": 10074,
+    "drought_threshold_spi": -1.0
+  },
+  "validation_metrics": {
+    "random_forest": {
+      "accuracy": 1.0,
+      "precision_drought": 1.0,
+      "recall_drought": 1.0,
+      "f1_drought": 1.0,
+      "confusion_matrix": [
+        [
+          6333,
+          0
+        ],
+        [
+          0,
+          3779
+        ]
+      ],
+      "roc_auc": 1.0
+    },
+    "xgboost": {
+      "accuracy": 1.0,
+      "precision_drought": 1.0,
+      "recall_drought": 1.0,
+      "f1_drought": 1.0,
+      "confusion_matrix": [
+        [
+          6333,
+          0
+        ],
+        [
+          0,
+          3779
+        ]
+      ],
+      "roc_auc": 1.0
+    },
+    "hist_gradient_boosting": {
+      "accuracy": 1.0,
+      "precision_drought": 1.0,
+      "recall_drought": 1.0,
+      "f1_drought": 1.0,
+      "confusion_matrix": [
+        [
+          6333,
+          0
+        ],
+        [
+          0,
+          3779
+        ]
+      ],
+      "roc_auc": 1.0
+    }
+  },
+  "test_metrics": {
+    "random_forest": {
+      "accuracy": 1.0,
+      "precision_drought": 1.0,
+      "recall_drought": 1.0,
+      "f1_drought": 1.0,
+      "confusion_matrix": [
+        [
+          4132,
+          0
+        ],
+        [
+          0,
+          5942
+        ]
+      ],
+      "roc_auc": 1.0
+    },
+    "xgboost": {
+      "accuracy": 1.0,
+      "precision_drought": 1.0,
+      "recall_drought": 1.0,
+      "f1_drought": 1.0,
+      "confusion_matrix": [
+        [
+          4132,
+          0
+        ],
+        [
+          0,
+          5942
+        ]
+      ],
+      "roc_auc": 1.0
+    },
+    "hist_gradient_boosting": {
+      "accuracy": 1.0,
+      "precision_drought": 1.0,
+      "recall_drought": 1.0,
+      "f1_drought": 1.0,
+      "confusion_matrix": [
+        [
+          4132,
+          0
+        ],
+        [
+          0,
+          5942
+        ]
+      ],
+      "roc_auc": 1.0
+    },
+    "ensemble": {
+      "accuracy": 1.0,
+      "precision_drought": 1.0,
+      "recall_drought": 1.0,
+      "f1_drought": 1.0,
+      "confusion_matrix": [
+        [
+          4132,
+          0
+        ],
+        [
+          0,
+          5942
+        ]
+      ],
+      "roc_auc": 1.0
+    }
+  },
+  "ensemble_weights": {
+    "random_forest": 1.0,
+    "xgboost": 1.0,
+    "hist_gradient_boosting": 1.0
+  },
+  "feature_importance": {
+    "random_forest": [
+      {
+        "feature": "spi_3",
+        "importance": 0.770405
+      },
+      {
+        "feature": "rain_60d",
+        "importance": 0.036165
+      },
+      {
+        "feature": "year",
+        "importance": 0.027025
+      },
+      {
+        "feature": "cumulative_seasonal",
+        "importance": 0.025371
+      },
+      {
+        "feature": "rain_anomaly",
+        "importance": 0.016898
+      },
+      {
+        "feature": "day_of_year",
+        "importance": 0.016433
+      },
+      {
+        "feature": "rain_30d",
+        "importance": 0.015275
+      },
+      {
+        "feature": "rain_30d_ma",
+        "importance": 0.015207
+      },
+      {
+        "feature": "latitude",
+        "importance": 0.015017
+      },
+      {
+        "feature": "longitude",
+        "importance": 0.014852
+      },
+      {
+        "feature": "month",
+        "importance": 0.011452
+      },
+      {
+        "feature": "tehsil_enc",
+        "importance": 0.008799
+      },
+      {
+        "feature": "district_enc",
+        "importance": 0.006788
+      },
+      {
+        "feature": "rain_14d",
+        "importance": 0.0062
+      },
+      {
+        "feature": "season",
+        "importance": 0.005834
+      },
+      {
+        "feature": "rain_7d_ma",
+        "importance": 0.002908
+      },
+      {
+        "feature": "rain_7d",
+        "importance": 0.002634
+      },
+      {
+        "feature": "rainfall_mm",
+        "importance": 0.001269
+      },
+      {
+        "feature": "rain_lag1",
+        "importance": 0.000346
+      },
+      {
+        "feature": "rain_lag30",
+        "importance": 0.000337
+      },
+      {
+        "feature": "rain_lag3",
+        "importance": 0.000288
+      },
+      {
+        "feature": "rain_lag14",
+        "importance": 0.000261
+      },
+      {
+        "feature": "rain_lag7",
+        "importance": 0.000235
+      }
+    ],
+    "xgboost": [
+      {
+        "feature": "spi_3",
+        "importance": 0.6691
+      },
+      {
+        "feature": "year",
+        "importance": 0.072871
+      },
+      {
+        "feature": "season",
+        "importance": 0.048351
+      },
+      {
+        "feature": "rain_60d",
+        "importance": 0.037425
+      },
+      {
+        "feature": "month",
+        "importance": 0.03638
+      },
+      {
+        "feature": "longitude",
+        "importance": 0.017364
+      },
+      {
+        "feature": "latitude",
+        "importance": 0.016415
+      },
+      {
+        "feature": "cumulative_seasonal",
+        "importance": 0.013912
+      },
+      {
+        "feature": "rain_30d",
+        "importance": 0.013783
+      },
+      {
+        "feature": "district_enc",
+        "importance": 0.013521
+      },
+      {
+        "feature": "rain_30d_ma",
+        "importance": 0.013077
+      },
+      {
+        "feature": "rainfall_mm",
+        "importance": 0.012785
+      },
+      {
+        "feature": "tehsil_enc",
+        "importance": 0.011129
+      },
+      {
+        "feature": "day_of_year",
+        "importance": 0.010995
+      },
+      {
+        "feature": "rain_anomaly",
+        "importance": 0.010014
+      },
+      {
+        "feature": "rain_14d",
+        "importance": 0.002878
+      },
+      {
+        "feature": "rain_7d",
+        "importance": 0.0
+      },
+      {
+        "feature": "rain_7d_ma",
+        "importance": 0.0
+      },
+      {
+        "feature": "rain_lag1",
+        "importance": 0.0
+      },
+      {
+        "feature": "rain_lag3",
+        "importance": 0.0
+      },
+      {
+        "feature": "rain_lag7",
+        "importance": 0.0
+      },
+      {
+        "feature": "rain_lag14",
+        "importance": 0.0
+      },
+      {
+        "feature": "rain_lag30",
+        "importance": 0.0
+      }
+    ],
+    "hist_gradient_boosting": []
+  },
+  "model_files": {
+    "random_forest": "C:\\Users\\admin\\Desktop\\AquaAI\\backend\\src\\ml\\models\\drought_random_forest.pkl",
+    "xgboost": "C:\\Users\\admin\\Desktop\\AquaAI\\backend\\src\\ml\\models\\drought_xgboost.pkl",
+    "hist_gradient_boosting": "C:\\Users\\admin\\Desktop\\AquaAI\\backend\\src\\ml\\models\\drought_hist_gradient_boosting.pkl"
+  }
+}

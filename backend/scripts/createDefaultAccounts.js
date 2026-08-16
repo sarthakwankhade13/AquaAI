@@ -7,23 +7,22 @@ const createDefaultAccounts = async () => {
     try {
         await connection.beginTransaction();
 
-        console.log('Creating default AquaAI accounts...\n');
+        console.log('Creating AquaAI Taluka Admin accounts...\n');
 
         // ============================================================
-        // ROLE IDs
+        // ROLE
         // ============================================================
 
-        const DISTRICT_ADMIN_ROLE = 2;
-        const VILLAGE_OFFICER_ROLE = 3;
+        const TALUKA_ADMIN_ROLE = 3;
 
         // ============================================================
         // HELPER
-        // Converts names into safe email usernames
+        // Converts Taluka names into safe email usernames
         //
         // Example:
-        // "Akola"       -> "akola"
-        // "Wahalabk."   -> "wahalabk"
-        // "Adgaon Kh."  -> "adgaonkh"
+        // "Amravati"     -> "amravati"
+        // "Murtizapur"   -> "murtizapur"
+        // "Barshitakli"  -> "barshitakli"
         // ============================================================
 
         const normalizeName = (name) => {
@@ -34,105 +33,12 @@ const createDefaultAccounts = async () => {
         };
 
         // ============================================================
-        // DISTRICT ADMINS
+        // ACTIVE TALUKAS
         // ============================================================
 
-        const [districts] = await connection.execute(`
+        const [talukas] = await connection.execute(`
             SELECT
-                id,
-                official_district_code,
-                district_name
-            FROM districts
-            WHERE status = 'active'
-            ORDER BY id
-        `);
-
-        console.log(`Found ${districts.length} active districts.\n`);
-
-        for (const district of districts) {
-
-            const districtName = district.district_name.trim();
-
-            // Example:
-            // Akola -> akola@gov.in
-            const username = normalizeName(districtName);
-
-            const email = `${username}@gov.in`;
-
-            // Example:
-            // Akola -> akola123
-            const password = `${username}123`;
-
-            const hashedPassword = await bcrypt.hash(password, 10);
-
-            // Unique synthetic mobile based on district ID
-            const mobile =
-                `910000${String(district.id).padStart(4, '0')}`;
-
-            const fullName =
-                `${districtName} District Admin`;
-
-            const address =
-                `${districtName}, Maharashtra`;
-
-            await connection.execute(
-                `
-                INSERT INTO users
-                (
-                    role_id,
-                    state_code,
-                    state_name,
-                    district_code,
-                    district_name,
-                    full_name,
-                    email,
-                    mobile,
-                    password,
-                    gender,
-                    address,
-                    is_verified,
-                    is_active,
-                    created_at,
-                    updated_at
-                )
-                VALUES
-                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, NOW(), NOW())
-                `,
-                [
-                    DISTRICT_ADMIN_ROLE,
-                    'MH',
-                    'Maharashtra',
-
-                    district.official_district_code,
-                    districtName,
-
-                    fullName,
-                    email,
-                    mobile,
-                    hashedPassword,
-
-                    'Other',
-                    address
-                ]
-            );
-
-            console.log(
-                `✓ DISTRICT_ADMIN | ${email} | ${password}`
-            );
-        }
-
-        // ============================================================
-        // VILLAGE OFFICERS
-        // ============================================================
-
-        const [villages] = await connection.execute(`
-            SELECT
-                v.id,
-                v.official_village_code,
-                v.village_name,
-
-                v.taluka_id,
-
+                t.id,
                 t.official_taluka_code,
                 t.taluka_name,
 
@@ -141,100 +47,105 @@ const createDefaultAccounts = async () => {
                 d.official_district_code,
                 d.district_name
 
-            FROM villages v
-
-            INNER JOIN talukas t
-                ON v.taluka_id = t.id
+            FROM talukas t
 
             INNER JOIN districts d
                 ON t.district_id = d.id
 
-            WHERE v.status = 'active'
-              AND t.status = 'active'
+            WHERE t.status = 'active'
               AND d.status = 'active'
 
-            ORDER BY v.id
+            ORDER BY t.id
         `);
 
-        console.log(`\nFound ${villages.length} active villages.`);
+        console.log(
+            `Found ${talukas.length} active talukas.\n`
+        );
 
         // ============================================================
-        // FIND DUPLICATE VILLAGE NAMES
+        // CHECK DUPLICATE TALUKA NAMES
         // ============================================================
 
-        const villageNameCounts = {};
+        const talukaNameCounts = {};
 
-        for (const village of villages) {
+        for (const taluka of talukas) {
 
             const username =
-                normalizeName(village.village_name);
+                normalizeName(taluka.taluka_name);
 
-            villageNameCounts[username] =
-                (villageNameCounts[username] || 0) + 1;
+            talukaNameCounts[username] =
+                (talukaNameCounts[username] || 0) + 1;
         }
 
         // ============================================================
-        // CREATE VILLAGE OFFICERS
+        // CREATE TALUKA ADMINS
         // ============================================================
 
-        for (const village of villages) {
-
-            const villageName =
-                village.village_name.trim();
-
-            const districtName =
-                village.district_name.trim();
+        for (const taluka of talukas) {
 
             const talukaName =
-                village.taluka_name.trim();
+                taluka.taluka_name.trim();
+
+            const districtName =
+                taluka.district_name.trim();
 
             const username =
-                normalizeName(villageName);
+                normalizeName(talukaName);
+
+            // ========================================================
+            // EMAIL
+            // ========================================================
 
             let email;
 
-            // --------------------------------------------------------
-            // UNIQUE VILLAGE NAME
-            //
-            // Dagadkhed
-            // -> dagadkhed@gov.in
-            // --------------------------------------------------------
+            if (talukaNameCounts[username] === 1) {
 
-            if (villageNameCounts[username] === 1) {
+                // Example:
+                // Amravati
+                // amravati@taluka.in
 
                 email =
-                    `${username}@gov.in`;
+                    `${username}@taluka.in`;
 
             } else {
 
-                // ----------------------------------------------------
-                // DUPLICATE VILLAGE NAME
-                //
-                // Chandanpur + official code
-                // -> chandanpur-529xxx@gov.in
-                //
-                // This guarantees unique email addresses.
-                // ----------------------------------------------------
+                // If same Taluka name exists in multiple districts,
+                // append official Taluka code to keep email unique.
 
                 email =
-                    `${username}-${village.official_village_code}@gov.in`;
+                    `${username}-${taluka.official_taluka_code}@taluka.in`;
             }
 
-            // Same password for every Village Officer
-            const password = 'village123';
+            // ========================================================
+            // PASSWORD
+            // ========================================================
+
+            const password =
+                'taluka123';
 
             const hashedPassword =
                 await bcrypt.hash(password, 10);
 
-            // Unique synthetic mobile based on village ID
+            // ========================================================
+            // UNIQUE MOBILE
+            // ========================================================
+
             const mobile =
-                `920000${String(village.id).padStart(4, '0')}`;
+                `920000${String(taluka.id).padStart(4, '0')}`;
+
+            // ========================================================
+            // USER DETAILS
+            // ========================================================
 
             const fullName =
-                `${villageName} Village Officer`;
+                `${talukaName} Taluka Admin`;
 
             const address =
-                `${villageName}, ${talukaName}, ${districtName}, Maharashtra`;
+                `${talukaName}, ${districtName}, Maharashtra`;
+
+            // ========================================================
+            // INSERT USER
+            // ========================================================
 
             await connection.execute(
                 `
@@ -250,9 +161,6 @@ const createDefaultAccounts = async () => {
 
                     taluka_code,
                     taluka_name,
-
-                    village_code,
-                    village_name,
 
                     full_name,
                     email,
@@ -273,7 +181,6 @@ const createDefaultAccounts = async () => {
                     ?, ?, ?,
                     ?, ?,
                     ?, ?,
-                    ?, ?,
                     ?, ?, ?, ?,
                     ?, ?,
                     1, 1,
@@ -281,19 +188,16 @@ const createDefaultAccounts = async () => {
                 )
                 `,
                 [
-                    VILLAGE_OFFICER_ROLE,
+                    TALUKA_ADMIN_ROLE,
 
                     'MH',
                     'Maharashtra',
 
-                    village.official_district_code,
+                    taluka.official_district_code,
                     districtName,
 
-                    village.official_taluka_code,
+                    taluka.official_taluka_code,
                     talukaName,
-
-                    village.official_village_code,
-                    villageName,
 
                     fullName,
                     email,
@@ -306,7 +210,7 @@ const createDefaultAccounts = async () => {
             );
 
             console.log(
-                `✓ VILLAGE_OFFICER | ${email} | ${password}`
+                `✓ TALUKA_ADMIN | ${email} | ${password}`
             );
         }
 
@@ -317,20 +221,22 @@ const createDefaultAccounts = async () => {
         await connection.commit();
 
         console.log('\n======================================');
-        console.log('DEFAULT ACCOUNTS CREATED SUCCESSFULLY');
+        console.log('TALUKA ADMIN ACCOUNTS CREATED');
         console.log('======================================');
 
-        console.log(`District Admins : ${districts.length}`);
-        console.log(`Village Officers: ${villages.length}`);
         console.log(
-            `Total Accounts  : ${districts.length + villages.length}`
+            `Taluka Admins : ${talukas.length}`
+        );
+
+        console.log(
+            `Password      : taluka123`
         );
 
     } catch (error) {
 
         await connection.rollback();
 
-        console.error('\n❌ Account creation failed.');
+        console.error('\n❌ Taluka account creation failed.');
         console.error(error);
 
     } finally {

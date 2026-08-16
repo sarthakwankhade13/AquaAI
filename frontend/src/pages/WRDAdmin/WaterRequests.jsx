@@ -11,7 +11,24 @@ import { getDistricts } from '../../services/geographyApi';
 export default function WaterRequests() {
   const [requests,       setRequests]       = useState([]);
   const [districts,      setDistricts]      = useState([]);
-  const [selectedDist,   setSelectedDist]   = useState('all');
+  
+  // Read logged-in user for scope filtering
+  const userObj = React.useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  }, []);
+
+  const userRole = userObj.role_name || userObj.roleName || 'SUPER_ADMIN';
+  const userDistrict = userObj.district_name || '';
+
+  const [selectedDist,   setSelectedDist]   = useState(() => {
+    return (userRole === 'DISTRICT_ADMIN' || userRole === 'VILLAGE_OFFICER') && userDistrict
+      ? userDistrict
+      : 'all';
+  });
   const [loading,        setLoading]        = useState(true);
   const [filter,         setFilter]         = useState('all');
 
@@ -64,9 +81,12 @@ export default function WaterRequests() {
                   className="adm-btn adm-btn-ghost adm-btn-sm"
                   value={selectedDist}
                   onChange={(e) => setSelectedDist(e.target.value)}
-                  style={{ cursor: 'pointer' }}
+                  disabled={userRole === 'DISTRICT_ADMIN' || userRole === 'VILLAGE_OFFICER'}
+                  style={{ cursor: userRole === 'DISTRICT_ADMIN' || userRole === 'VILLAGE_OFFICER' ? 'not-allowed' : 'pointer' }}
                 >
-                  <option value="all">All Districts (Vidarbha)</option>
+                  {userRole !== 'DISTRICT_ADMIN' && userRole !== 'VILLAGE_OFFICER' && (
+                    <option value="all">All Districts (Vidarbha)</option>
+                  )}
                   {districts.map((d) => (
                     <option key={d.id} value={d.district_name}>{d.district_name}</option>
                   ))}

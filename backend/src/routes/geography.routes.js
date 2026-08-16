@@ -12,6 +12,7 @@ import {
   getVillagesByTaluka,
   getVillageById,
   getVillages,
+  getDashboardSummary,
   syncGeography,
   validateGeography,
 } from '../controllers/geography.controller.js';
@@ -28,6 +29,7 @@ router.get('/talukas/:talukaId',              getTalukaById);
 router.get('/talukas/:talukaId/villages',     getVillagesByTaluka);
 router.get('/villages',                       getVillages);
 router.get('/villages/:villageId',            getVillageById);
+router.get('/geography/summary',              getDashboardSummary);
 
 // ─── Protected Admin Endpoints ─────────────────────────────────
 router.post(

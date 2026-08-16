@@ -1,0 +1,8 @@
+{
+  "train_end_date": "2023-09-13",
+  "val_end_date": "2024-06-07",
+  "train_rows": 47310,
+  "val_rows": 10112,
+  "test_rows": 10074,
+  "drought_threshold_spi": -1.0
+}

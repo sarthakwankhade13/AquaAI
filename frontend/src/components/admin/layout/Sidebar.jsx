@@ -19,55 +19,55 @@ const NAV = [
         to: '/admin/dashboard',
         icon: LayoutDashboard,
         label: 'Dashboard',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN', 'VILLAGE_OFFICER'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN', 'TALUKA_ADMIN'],
       },
       {
         to: '/admin/environmental',
         icon: Cloud,
         label: 'Environmental Monitoring',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN'],
       },
       {
         to: '/admin/ai-predictions',
         icon: BrainCircuit,
         label: 'AI Predictions',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN'],
       },
       {
         to: '/admin/water-requests',
         icon: Droplets,
         label: 'Water Requests',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN', 'VILLAGE_OFFICER'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN', 'TALUKA_ADMIN'],
       },
       {
         to: '/admin/tanker-management',
         icon: Truck,
         label: 'Tanker Management',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN'],
       },
       {
         to: '/admin/trip-management',
         icon: Route,
         label: 'Trip Management',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN'],
       },
       {
         to: '/admin/complaint-management',
         icon: MessageSquareWarning,
         label: 'Complaint Management',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN', 'VILLAGE_OFFICER'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN', 'TALUKA_ADMIN'],
       },
       {
         to: '/admin/water-distribution',
         icon: GitBranch,
         label: 'Water Distribution',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN', 'VILLAGE_OFFICER'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN', 'TALUKA_ADMIN'],
       },
       {
         to: '/admin/geography',
         icon: MapPin,
         label: 'Geography Management',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN'],
       },
     ],
   },
@@ -79,13 +79,13 @@ const NAV = [
         to: '/admin/reports',
         icon: BarChart3,
         label: 'Reports',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN', 'VILLAGE_OFFICER'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN', 'TALUKA_ADMIN'],
       },
       {
         to: '/admin/notifications',
         icon: Bell,
         label: 'Notifications',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN', 'VILLAGE_OFFICER'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN', 'TALUKA_ADMIN'],
       },
     ],
   },
@@ -97,31 +97,31 @@ const NAV = [
         to: '/admin/geography',
         icon: MapPin,
         label: 'Geography Master',
-        roles: ['SUPER_ADMIN'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN'],
       },
       {
         to: '/admin/user-management',
         icon: Users,
         label: 'User Management',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN'],
       },
       {
         to: '/admin/audit-logs',
         icon: ScrollText,
         label: 'Audit Logs',
-        roles: ['SUPER_ADMIN'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN'],
       },
       {
         to: '/admin/settings',
         icon: Settings,
         label: 'Settings',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN'],
       },
       {
         to: '/admin/profile',
         icon: UserCircle,
         label: 'Profile',
-        roles: ['SUPER_ADMIN', 'DISTRICT_ADMIN', 'VILLAGE_OFFICER'],
+        roles: ['WRD_ADMIN', 'SUPER_ADMIN', 'DISTRICT_ADMIN', 'TALUKA_ADMIN'],
       },
     ],
   },
@@ -135,7 +135,10 @@ export default function Sidebar({
 }) {
   const navigate = useNavigate();
 
+  // ─────────────────────────────────────────────
   // Get logged-in user
+  // ─────────────────────────────────────────────
+
   const userData = localStorage.getItem('user');
 
   let user = null;
@@ -146,19 +149,47 @@ export default function Sidebar({
     user = null;
   }
 
-  const userRole = user?.role_name || user?.roleName || user?.role;
+  // ─────────────────────────────────────────────
+  // Get role safely
+  // ─────────────────────────────────────────────
 
+  const rawUserRole =
+    user?.role_name ||
+    user?.roleName ||
+    user?.role ||
+    '';
+
+  // Normalize role
+  const userRole = String(rawUserRole)
+    .trim()
+    .toUpperCase()
+    .replace(/\s+/g, '_');
+
+  // Support TALUKAADMIN also
+  const normalizedRole =
+    userRole === 'TALUKAADMIN'
+      ? 'TALUKA_ADMIN'
+      : userRole;
+
+  // ─────────────────────────────────────────────
   // Filter navigation according to logged-in role
+  // ─────────────────────────────────────────────
+
   const roleBasedNav = NAV.map((section) => ({
     ...section,
     items: section.items.filter((item) =>
-      item.roles.includes(userRole)
+      item.roles.includes(normalizedRole)
     ),
   })).filter((section) => section.items.length > 0);
+
+  // ─────────────────────────────────────────────
+  // Logout
+  // ─────────────────────────────────────────────
 
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('user');
+
     navigate('/login');
   };
 
@@ -182,27 +213,37 @@ export default function Sidebar({
 
         {/* Brand */}
         <div className="adm-sidebar-brand">
+
           <div className="adm-sidebar-logo">
             <Waves size={20} color="#fff" />
           </div>
 
           {!collapsed && (
             <div className="adm-sidebar-brand-text">
+
               <div className="adm-sidebar-brand-name">
                 Aqua<span>AI</span>
               </div>
 
               <div className="adm-sidebar-brand-sub">
-                {userRole === 'SUPER_ADMIN'
+
+                {normalizedRole === 'WRD_ADMIN' ||
+                  normalizedRole === 'SUPER_ADMIN'
                   ? 'WRD Super Admin'
-                  : userRole === 'DISTRICT_ADMIN'
+
+                  : normalizedRole === 'DISTRICT_ADMIN'
                     ? 'District Admin'
-                    : userRole === 'VILLAGE_OFFICER'
-                      ? 'Village Officer'
+
+                    : normalizedRole === 'TALUKA_ADMIN'
+                      ? 'Taluka Admin'
+
                       : 'AquaAI'}
+
               </div>
+
             </div>
           )}
+
         </div>
 
         {/* Role Based Navigation */}
@@ -226,6 +267,7 @@ export default function Sidebar({
                   data-tooltip={collapsed ? label : undefined}
                   title={collapsed ? label : undefined}
                 >
+
                   <span className="adm-nav-icon">
                     <Icon size={18} />
                   </span>
@@ -233,15 +275,18 @@ export default function Sidebar({
                   <span className="adm-nav-label">
                     {label}
                   </span>
+
                 </NavLink>
               ))}
 
               <div className="adm-section-sep" />
+
             </div>
           ))}
 
           {/* Logout */}
           <div className="adm-nav-section">
+
             <button
               className="adm-nav-item"
               onClick={handleLogout}
@@ -254,6 +299,7 @@ export default function Sidebar({
               }}
               data-tooltip={collapsed ? 'Logout' : undefined}
             >
+
               <span
                 className="adm-nav-icon"
                 style={{ color: '#ef4444' }}
@@ -267,23 +313,29 @@ export default function Sidebar({
               >
                 Logout
               </span>
+
             </button>
+
           </div>
 
         </nav>
 
         {/* Collapse toggle */}
         <div className="adm-sidebar-footer">
+
           <button
             className="adm-sidebar-toggle"
             onClick={onToggle}
             aria-label="Toggle sidebar"
           >
+
             {collapsed
               ? <ChevronRight size={16} />
               : <ChevronLeft size={16} />
             }
+
           </button>
+
         </div>
 
       </aside>

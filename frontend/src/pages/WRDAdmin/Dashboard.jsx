@@ -42,22 +42,53 @@ export default function Dashboard() {
     });
   }, []);
 
+  // Read logged-in user for scope header
+  let currentUser = {};
+  try {
+    currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    currentUser = {};
+  }
+
+  const roleName = currentUser.role_name || currentUser.roleName || 'SUPER_ADMIN';
+  const scopeDistrict = currentUser.district_name || '';
+  const scopeVillage = currentUser.village_name || '';
+
   if (loading) return <AdminLayout title="Dashboard" breadcrumb="Dashboard"><LoadingState /></AdminLayout>;
 
   return (
     <AdminLayout title="Dashboard" breadcrumb="Dashboard">
       <div className="adm-page">
 
+        {/* ── Role Scope Header Banner ── */}
+        <div className="adm-card adm-card-pad" style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#fff', marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>
+                Welcome, {currentUser.full_name || 'Officer'}
+              </div>
+              <div style={{ fontSize: 13, opacity: 0.9, marginTop: 4 }}>
+                {roleName === 'DISTRICT_ADMIN' && `District Jurisdiction Scope: ${scopeDistrict} District`}
+                {roleName === 'VILLAGE_OFFICER' && `Village Jurisdiction Scope: ${scopeVillage} Gram Panchayat (${scopeDistrict} District)`}
+                {roleName === 'SUPER_ADMIN' && `WRD Super Admin Scope: All 11 Districts of Vidarbha Region`}
+              </div>
+            </div>
+            <div style={{ padding: '6px 14px', background: 'rgba(255,255,255,0.2)', borderRadius: 20, fontSize: 12, fontWeight: 700, backdropFilter: 'blur(4px)' }}>
+              {roleName}
+            </div>
+          </div>
+        </div>
+
         {/* ── KPI Cards ── */}
         <div className="adm-grid-4">
           <StatCard icon={Map}                   label="Total Districts"       value={kpi.totalDistricts}       trend="neu" trendText="Vidarbha"  iconBg="#e0f2fe" iconColor="#0284c7" accentColor="#0ea5e9" />
-          <StatCard icon={Building2}             label="Total Villages"        value={kpi.totalVillages.toLocaleString()} trend="up" trendText="+12" iconBg="#dcfce7" iconColor="#16a34a" accentColor="#22c55e" />
-          <StatCard icon={Truck}                 label="Active Tankers"        value={kpi.activeTankers}        trend="up"  trendText="+3"     iconBg="#ede9fe" iconColor="#7c3aed" accentColor="#8b5cf6" />
-          <StatCard icon={Route}                 label="Active Trips"          value={kpi.activeTrips}          trend="warn" trendText="1 delayed" iconBg="#fef3c7" iconColor="#d97706" accentColor="#f59e0b" />
-          <StatCard icon={Droplets}              label="Pending Requests"      value={kpi.pendingWaterRequests} trend="down" trendText="-8 today"  iconBg="#dbeafe" iconColor="#1d4ed8" accentColor="#3b82f6" />
-          <StatCard icon={MessageSquareWarning}  label="Open Complaints"       value={kpi.openComplaints}       trend="down" trendText="-5 today"  iconBg="#ffedd5" iconColor="#c2410c" accentColor="#f97316" />
-          <StatCard icon={AlertTriangle}         label="High Risk Villages"    value={kpi.highRiskVillages}     trend="warn" trendText="Monitor"   iconBg="#fee2e2" iconColor="#dc2626" accentColor="#ef4444" />
-          <StatCard icon={Database}              label="Available Water"       value={kpi.availableWaterML}     trend="down" trendText="-4% week"  iconBg="#ccfbf1" iconColor="#0f766e" accentColor="#14b8a6" />
+          <StatCard icon={Building2}             label="Total Villages"        value={kpi.totalVillages.toLocaleString()} trend="neu" trendText="Official MRSAC" iconBg="#dcfce7" iconColor="#16a34a" accentColor="#22c55e" />
+          <StatCard icon={Truck}                 label="Active Tankers"        value={kpi.activeTankers}        trend="neu" trendText="System"     iconBg="#ede9fe" iconColor="#7c3aed" accentColor="#8b5cf6" />
+          <StatCard icon={Route}                 label="Active Trips"          value={kpi.activeTrips}          trend="neu" trendText="System" iconBg="#fef3c7" iconColor="#d97706" accentColor="#f59e0b" />
+          <StatCard icon={Droplets}              label="Pending Requests"      value={kpi.pendingWaterRequests} trend="neu" trendText="System"  iconBg="#dbeafe" iconColor="#1d4ed8" accentColor="#3b82f6" />
+          <StatCard icon={MessageSquareWarning}  label="Open Complaints"       value={kpi.openComplaints}       trend="neu" trendText="System"  iconBg="#ffedd5" iconColor="#c2410c" accentColor="#f97316" />
+          <StatCard icon={AlertTriangle}         label="High Risk Villages"    value={kpi.highRiskVillages}     trend="neu" trendText="Pending AI"   iconBg="#fee2e2" iconColor="#dc2626" accentColor="#ef4444" />
+          <StatCard icon={Database}              label="Available Water"       value={kpi.availableWaterML}     trend="neu" trendText="System"  iconBg="#ccfbf1" iconColor="#0f766e" accentColor="#14b8a6" />
         </div>
 
         {/* ── Emergency Alerts ── */}
@@ -67,10 +98,8 @@ export default function Dashboard() {
             subtitle="Requires immediate attention"
             action={<button className="adm-btn adm-btn-ghost adm-btn-sm"><RefreshCw size={12} /> Refresh</button>}
           />
-          <div className="adm-card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <AlertCard type="red"    title="Critical Water Shortage — Nandgaon" detail="Village without water supply for 3 consecutive days · Population: 2,400" time="5 min ago" action={<button className="adm-btn adm-btn-danger adm-btn-sm">Dispatch Now</button>} />
-            <AlertCard type="red"    title="Tanker TR-0446 Severely Delayed"    detail="Washim → Risod route · 2 hrs delayed · Beneficiaries waiting" time="18 min ago" action={<button className="adm-btn adm-btn-danger adm-btn-sm">View Trip</button>} />
-            <AlertCard type="orange" title="Reservoir Level Critical — Wardha"  detail="Wardha reservoir at 38% capacity · Below minimum operational level" time="1 hr ago" action={<button className="adm-btn adm-btn-ghost adm-btn-sm">View Details</button>} />
+          <div className="adm-card-pad" style={{ display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'center', color: '#64748b', padding: '24px' }}>
+            No active emergency alerts recorded. System operating normally.
           </div>
         </div>
 

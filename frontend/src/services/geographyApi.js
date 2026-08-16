@@ -94,6 +94,11 @@ export const syncGeographyData = async () => {
   return response.data;
 };
 
+export const getGeographySummary = async () => {
+  const response = await api.get('/geography/summary');
+  return response.data;
+};
+
 export default {
   getDistricts,
   getDistrictById,
@@ -102,5 +107,6 @@ export default {
   getVillagesByTaluka,
   getVillageById,
   getVillages,
+  getGeographySummary,
   syncGeographyData,
 };

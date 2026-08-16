@@ -1,0 +1,12 @@
+{
+  "pythonVersion": "3.13",
+  "extraPaths": [
+    "backend/src/ml/preprocessing",
+    "backend/src/ml/training",
+    "backend/src/ml/prediction"
+  ],
+  "venvPath": ".",
+  "typeCheckingMode": "basic",
+  "reportMissingImports": "warning",
+  "reportMissingModuleSource": "none"
+}

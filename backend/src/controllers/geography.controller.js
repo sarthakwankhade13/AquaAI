@@ -125,6 +125,26 @@ export const getVillages = async (req, res, next) => {
 };
 
 /**
+ * GET /api/v1/geography/summary
+ * Return real-time count metrics from MySQL database
+ */
+export const getDashboardSummary = async (req, res, next) => {
+  try {
+    const districtCount = await geoRepo.countDistricts();
+    const talukaCount   = await geoRepo.countTalukas();
+    const villageCount  = await geoRepo.countVillages();
+
+    return sendSuccess(res, HTTP.OK, 'Dashboard summary fetched successfully', {
+      totalDistricts: districtCount,
+      totalTalukas: talukaCount,
+      totalVillages: villageCount,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * GET /api/v1/admin/geography/validate
  * Validate data integrity: counts, orphans, duplicates
  */

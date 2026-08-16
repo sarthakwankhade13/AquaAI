@@ -1,0 +1,28 @@
+{
+  "features": [
+    "rainfall_mm",
+    "rain_7d",
+    "rain_14d",
+    "rain_30d",
+    "rain_60d",
+    "rain_7d_ma",
+    "rain_30d_ma",
+    "rain_lag1",
+    "rain_lag3",
+    "rain_lag7",
+    "rain_lag14",
+    "rain_lag30",
+    "rain_anomaly",
+    "cumulative_seasonal",
+    "spi_3",
+    "month",
+    "year",
+    "day_of_year",
+    "season",
+    "latitude",
+    "longitude",
+    "district_enc",
+    "tehsil_enc"
+  ],
+  "target": "drought_label"
+}

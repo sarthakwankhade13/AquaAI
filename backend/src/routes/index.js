@@ -19,6 +19,7 @@ import authRoutes from './auth.routes.js';
 import userRoutes from './user.routes.js';
 import geographyRoutes from './geography.routes.js';
 import weatherRoutes from './weather.routes.js';
+import droughtRoutes from './drought.routes.js';
 
 const router = Router();
 
@@ -30,5 +31,6 @@ router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/', geographyRoutes);
 router.use('/weather', weatherRoutes);
+router.use('/drought', droughtRoutes);
 
 export default router;
