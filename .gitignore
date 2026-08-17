@@ -1,0 +1,53 @@
+# --- Environment / Secrets ----------------------------------------------------
+.env
+.env.*
+!.env.example
+
+# --- Node.js ------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+dist/
+build/
+.next/
+
+# --- Python -------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+.Python
+
+# --- ML — Trained model binaries (large, binary, regenerable) -----------------
+backend/src/ml/models/*.pkl
+backend/src/ml/models/*.joblib
+
+# --- ML — Processed / generated data (large, regenerable) --------------------
+backend/src/ml/data/processed/*.csv
+backend/src/ml/data/processed/*.parquet
+
+# --- ML — Raw dataset (large CSV) ---------------------------------------------
+backend/src/models/rainfall_vidarbha_filtered.csv
+
+# --- Logs ---------------------------------------------------------------------
+logs/
+*.log
+
+# --- OS artifacts -------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editor -------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo

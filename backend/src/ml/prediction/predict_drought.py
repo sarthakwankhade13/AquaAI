@@ -195,7 +195,7 @@ def build_feature_vector(
     historical_df  : pd.DataFrame,
     open_meteo_data: dict | None,
     artefacts      : dict,
-    prediction_date: datetime = None,
+    prediction_date: datetime | None = None,
 ) -> tuple[np.ndarray, dict]:
     """
     Build the feature vector for a single prediction.
@@ -296,11 +296,16 @@ def build_feature_vector(
         if len(last_anomaly) > 0:
             rain_anomaly = float(last_anomaly.iloc[-1])
 
-    cumulative_seasonal = rolling_sum(min(120, (prediction_date - datetime(year, 6, 1)).days + 1))
+    # Clamp to >=1: before June 1 the delta is negative, rolling_sum(<=0) returns wrong 0
+    cumulative_seasonal = rolling_sum(max(1, min(120, (prediction_date - datetime(year, 6, 1)).days + 1)))
 
     # ── Encoding ──────────────────────────────────────────────────────────
     dist_enc   = enc_maps.get("district", {}).get(district.strip().title(), -1)
-    tehsil_enc = enc_maps.get("tehsil",   {}).get(tehsil.strip().upper(), -1)
+    tehsil_enc = enc_maps.get("tehsil",   {}).get(tehsil.strip().upper(),   -1)
+    if dist_enc == -1:
+        log.warning(f"District '{district}' not in encoding map — model never saw this location; predictions may be unreliable.")
+    if tehsil_enc == -1:
+        log.warning(f"Tehsil '{tehsil}' not in encoding map — model never saw this location; predictions may be unreliable.")
 
     # ── Build feature dict (must match FEATURE_COLUMNS order) ────────────
     feat_dict = {
@@ -385,7 +390,7 @@ def predict(district: str, tehsil: str, open_meteo_json: str | None = None) -> d
     # ── Per-model predictions ─────────────────────────────────────────────
     model_results = {}
     weighted_prob  = 0.0
-    total_weight   = sum(weights.get(n, 1.0) for n in models)
+    total_weight   = max(sum(weights.get(n, 1.0) for n in models), 1e-9)  # guard ZeroDivisionError
 
     for name, model in models.items():
         w = weights.get(name, 1.0)

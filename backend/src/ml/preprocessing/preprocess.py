@@ -235,6 +235,14 @@ def aggregate_tehsil_daily(df: pd.DataFrame) -> pd.DataFrame:
 # 4.  FEATURE ENGINEERING
 # ═══════════════════════════════════════════════════════════════════════════════
 
+def _get_season(m: int) -> int:
+    """Map calendar month → meteorological season index (module-level to avoid loop redefinition)."""
+    if m in (6, 7, 8, 9):  return 0   # Kharif/Monsoon
+    if m in (10, 11):       return 1   # Post-monsoon
+    if m in (12, 1, 2):     return 2   # Winter
+    return 3                            # Pre-monsoon (Mar-May)
+
+
 def add_features(df: pd.DataFrame) -> pd.DataFrame:
     """Add rainfall-based features. All rolling/lag windows use shift(1) to
     avoid target leakage (i.e., never include the current day in past windows)."""
@@ -267,13 +275,7 @@ def add_features(df: pd.DataFrame) -> pd.DataFrame:
         g["year"]       = g["date"].dt.year
         g["day_of_year"]= g["date"].dt.dayofyear
 
-        def get_season(m):
-            if m in [6, 7, 8, 9]:   return 0   # Kharif/Monsoon
-            if m in [10, 11]:        return 1   # Post-monsoon
-            if m in [12, 1, 2]:      return 2   # Winter
-            return 3                             # Pre-monsoon (Mar-May)
-
-        g["season"] = g["month"].apply(get_season)
+        g["season"] = g["month"].map(_get_season)
 
         # ── Cumulative seasonal rainfall (resets each monsoon season start) ──
         g["cumulative_seasonal"] = (
@@ -322,7 +324,7 @@ def compute_spi3(df: pd.DataFrame, train_mask: pd.Series) -> pd.DataFrame:
         .reset_index()
         .rename(columns={"rainfall_mm": "monthly_rain"})
     )
-    monthly["year_month_dt"] = monthly["year_month"].dt.to_timestamp()
+    monthly["year_month_dt"] = pd.PeriodIndex(monthly["year_month"]).to_timestamp()
     monthly = monthly.sort_values(["tehsil", "year_month_dt"])
 
     # 3-month rolling sum per tehsil
@@ -366,20 +368,21 @@ def compute_spi3(df: pd.DataFrame, train_mask: pd.Series) -> pd.DataFrame:
                 log.warning(f"  Gamma fit failed for {tehsil} month {cal_month}: {e}")
                 continue
 
-        # Transform all rows for this tehsil
-        for idx, row in monthly[monthly["tehsil"] == tehsil].iterrows():
-            if pd.isna(row["rain_3m"]):
+        # Vectorised SPI transform for this tehsil (avoids slow iterrows + .at[])
+        for cal_m, fp in gamma_params[tehsil].items():
+            cm_mask = (
+                (monthly["tehsil"] == tehsil)
+                & (monthly["calendar_month"] == cal_m)
+                & monthly["rain_3m"].notna()
+            )
+            cm_idx = monthly.index[cm_mask]
+            if len(cm_idx) == 0:
                 continue
-            cal_m = int(row["calendar_month"])
-            if cal_m not in gamma_params.get(tehsil, {}):
-                continue
-            fp = gamma_params[tehsil][cal_m]
-            cdf_val = stats.gamma.cdf(max(row["rain_3m"], 1e-6), *fp)
-            # Clip to avoid inf in ppf
-            cdf_val = np.clip(cdf_val, 1e-6, 1 - 1e-6)
-            spi_val = stats.norm.ppf(cdf_val)
-            monthly.at[idx, "spi_3"] = round(float(spi_val), 4)
-            monthly.at[idx, "drought_label"] = int(spi_val < SPI_DROUGHT_THRESHOLD)
+            rain_vals = np.maximum(monthly.loc[cm_idx, "rain_3m"].values, 1e-6)
+            cdf_vals  = np.clip(stats.gamma.cdf(rain_vals, *fp), 1e-6, 1 - 1e-6)
+            spi_vals  = stats.norm.ppf(cdf_vals)
+            monthly.loc[cm_idx, "spi_3"]          = np.round(spi_vals, 4)
+            monthly.loc[cm_idx, "drought_label"] = (spi_vals < SPI_DROUGHT_THRESHOLD).astype(int)
 
     # Save gamma parameters for inference
     gamma_params_serialisable = {
@@ -536,7 +539,7 @@ def run_preprocessing() -> dict:
 
     # Step 9 – Filter to rows with a valid drought label
     labelled = daily[daily[TARGET_COLUMN].notna()].copy()
-    labelled[TARGET_COLUMN] = labelled[TARGET_COLUMN].astype(int)
+    labelled.loc[:, TARGET_COLUMN] = labelled[TARGET_COLUMN].astype(int)
 
     log.info(f"Labelled rows available for modelling: {len(labelled):,}")
 

@@ -110,7 +110,7 @@ def prepare_Xy(df: pd.DataFrame, mask: pd.Series, feature_cols: list, target_col
     """Select features and target for a given split mask."""
     subset = df[mask].dropna(subset=feature_cols + [target_col]).copy()
     X = subset[feature_cols].astype(float).values
-    y = subset[target_col].astype(int).values
+    y = np.array(subset[target_col].astype(int).values, dtype=int)
     return X, y, subset
 
 
@@ -124,18 +124,17 @@ def build_models(class_weight_dict: dict) -> dict:
     try:
         import xgboost as xgb
         xgb_model = xgb.XGBClassifier(
-            n_estimators      = 300,
-            max_depth         = 6,
-            learning_rate     = 0.05,
-            subsample         = 0.8,
-            colsample_bytree  = 0.8,
-            min_child_weight  = 5,
-            gamma             = 1,
-            scale_pos_weight  = class_weight_dict.get(1, 1) / max(class_weight_dict.get(0, 1), 1),
-            eval_metric       = "logloss",
-            use_label_encoder = False,
-            random_state      = 42,
-            n_jobs            = -1,
+            n_estimators     = 300,
+            max_depth        = 6,
+            learning_rate    = 0.05,
+            subsample        = 0.8,
+            colsample_bytree = 0.8,
+            min_child_weight = 5,
+            gamma            = 1,
+            scale_pos_weight = class_weight_dict.get(1, 1) / max(class_weight_dict.get(0, 1), 1),
+            eval_metric      = "logloss",
+            random_state     = 42,
+            n_jobs           = -1,
         )
     except ImportError:
         log.warning("XGBoost not available — using GradientBoostingClassifier instead.")
