@@ -1,19 +1,22 @@
 /**
- * roles.js — Application Role Constants (RBAC)
+ * AquaAI — Application Roles
  *
- * Single source of truth for all user roles.
- * Used in JWT payload, DB records, and the role middleware.
- * Frozen to prevent accidental mutation at runtime.
- *
- * Usage: import ROLES from '../constants/roles.js'
+ * IMPORTANT:
+ * These values MUST match the role_name values stored
+ * in the MySQL `roles` table.
  */
 
-const ROLES = Object.freeze({
-  WRD_ADMIN    : 'wrd_admin',      // Super Admin — full system access
-  OPERATOR     : 'operator',        // Field operator — limited access
-  CITIZEN      : 'citizen',         // Public user — water requests
-  TANKER_DRIVER: 'tanker_driver',   // Driver — trip management only
-  ANALYST      : 'analyst',         // Data analyst — read-only reports
-});
+const ROLES = {
+  WRD_SUPER_ADMIN: 'WRD Super Admin',
+  WRD_ADMIN: 'WRD Admin',
+  WRD_OFFICER: 'WRD Officer',
+
+  DISTRICT_ADMIN: 'District Admin',
+  TALUKA_ADMIN: 'Taluka Admin',
+
+  VILLAGE_HEAD: 'Village Head',
+  FARMER: 'Farmer',
+  GUEST: 'Guest',
+};
 
 export default ROLES;

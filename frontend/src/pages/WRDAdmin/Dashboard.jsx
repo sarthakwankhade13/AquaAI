@@ -22,14 +22,14 @@ import { getTankerStats } from '../../services/tankerService';
 import { getComplaintStats } from '../../services/complaintService';
 
 export default function Dashboard() {
-  const [kpi,      setKpi]      = useState(null);
-  const [drought,  setDrought]  = useState(null);
-  const [water,    setWater]    = useState(null);
+  const [kpi, setKpi] = useState(null);
+  const [drought, setDrought] = useState(null);
+  const [water, setWater] = useState(null);
   const [activity, setActivity] = useState([]);
-  const [tankers,  setTankers]  = useState(null);
-  const [complaints,setComp]   = useState(null);
+  const [tankers, setTankers] = useState(null);
+  const [complaints, setComp] = useState(null);
   const [requests, setRequests] = useState([]);
-  const [loading,  setLoading]  = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
@@ -69,7 +69,7 @@ export default function Dashboard() {
               </div>
               <div style={{ fontSize: 13, opacity: 0.9, marginTop: 4 }}>
                 {roleName === 'DISTRICT_ADMIN' && `District Jurisdiction Scope: ${scopeDistrict} District`}
-                {roleName === 'VILLAGE_OFFICER' && `Village Jurisdiction Scope: ${scopeVillage} Gram Panchayat (${scopeDistrict} District)`}
+                {roleName === 'TALUKA_ADMIN' && `Taluka level administrative Officer : ${scopeVillage} Gram Panchayat (${scopeDistrict} District)`}
                 {roleName === 'SUPER_ADMIN' && `WRD Super Admin Scope: All 11 Districts of Vidarbha Region`}
               </div>
             </div>
@@ -81,14 +81,14 @@ export default function Dashboard() {
 
         {/* ── KPI Cards ── */}
         <div className="adm-grid-4">
-          <StatCard icon={Map}                   label="Total Districts"       value={kpi.totalDistricts}       trend="neu" trendText="Vidarbha"  iconBg="#e0f2fe" iconColor="#0284c7" accentColor="#0ea5e9" />
-          <StatCard icon={Building2}             label="Total Villages"        value={kpi.totalVillages.toLocaleString()} trend="neu" trendText="Official MRSAC" iconBg="#dcfce7" iconColor="#16a34a" accentColor="#22c55e" />
-          <StatCard icon={Truck}                 label="Active Tankers"        value={kpi.activeTankers}        trend="neu" trendText="System"     iconBg="#ede9fe" iconColor="#7c3aed" accentColor="#8b5cf6" />
-          <StatCard icon={Route}                 label="Active Trips"          value={kpi.activeTrips}          trend="neu" trendText="System" iconBg="#fef3c7" iconColor="#d97706" accentColor="#f59e0b" />
-          <StatCard icon={Droplets}              label="Pending Requests"      value={kpi.pendingWaterRequests} trend="neu" trendText="System"  iconBg="#dbeafe" iconColor="#1d4ed8" accentColor="#3b82f6" />
-          <StatCard icon={MessageSquareWarning}  label="Open Complaints"       value={kpi.openComplaints}       trend="neu" trendText="System"  iconBg="#ffedd5" iconColor="#c2410c" accentColor="#f97316" />
-          <StatCard icon={AlertTriangle}         label="High Risk Villages"    value={kpi.highRiskVillages}     trend="neu" trendText="Pending AI"   iconBg="#fee2e2" iconColor="#dc2626" accentColor="#ef4444" />
-          <StatCard icon={Database}              label="Available Water"       value={kpi.availableWaterML}     trend="neu" trendText="System"  iconBg="#ccfbf1" iconColor="#0f766e" accentColor="#14b8a6" />
+          <StatCard icon={Map} label="Total Districts" value={kpi.totalDistricts} trend="neu" trendText="Vidarbha" iconBg="#e0f2fe" iconColor="#0284c7" accentColor="#0ea5e9" />
+          <StatCard icon={Building2} label="Total Villages" value={kpi.totalVillages.toLocaleString()} trend="neu" trendText="Official MRSAC" iconBg="#dcfce7" iconColor="#16a34a" accentColor="#22c55e" />
+          <StatCard icon={Truck} label="Active Tankers" value={kpi.activeTankers} trend="neu" trendText="System" iconBg="#ede9fe" iconColor="#7c3aed" accentColor="#8b5cf6" />
+          <StatCard icon={Route} label="Active Trips" value={kpi.activeTrips} trend="neu" trendText="System" iconBg="#fef3c7" iconColor="#d97706" accentColor="#f59e0b" />
+          <StatCard icon={Droplets} label="Pending Requests" value={kpi.pendingWaterRequests} trend="neu" trendText="System" iconBg="#dbeafe" iconColor="#1d4ed8" accentColor="#3b82f6" />
+          <StatCard icon={MessageSquareWarning} label="Open Complaints" value={kpi.openComplaints} trend="neu" trendText="System" iconBg="#ffedd5" iconColor="#c2410c" accentColor="#f97316" />
+          <StatCard icon={AlertTriangle} label="High Risk Villages" value={kpi.highRiskVillages} trend="neu" trendText="Pending AI" iconBg="#fee2e2" iconColor="#dc2626" accentColor="#ef4444" />
+          <StatCard icon={Database} label="Available Water" value={kpi.availableWaterML} trend="neu" trendText="System" iconBg="#ccfbf1" iconColor="#0f766e" accentColor="#14b8a6" />
         </div>
 
         {/* ── Emergency Alerts ── */}
@@ -117,10 +117,10 @@ export default function Dashboard() {
               />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 16 }}>
                 {[
-                  { label: 'High Risk',   val: drought.highRiskVillages,     color: '#f97316' },
-                  { label: 'Moderate',    val: drought.moderateRiskVillages,  color: '#f59e0b' },
-                  { label: 'Severe',      val: drought.severeVillages,        color: '#ef4444' },
-                  { label: 'Low Risk',    val: drought.lowRiskVillages,       color: '#22c55e' },
+                  { label: 'High Risk', val: drought.highRiskVillages, color: '#f97316' },
+                  { label: 'Moderate', val: drought.moderateRiskVillages, color: '#f59e0b' },
+                  { label: 'Severe', val: drought.severeVillages, color: '#ef4444' },
+                  { label: 'Low Risk', val: drought.lowRiskVillages, color: '#22c55e' },
                 ].map(({ label, val, color }) => (
                   <div key={label} style={{ background: '#f8fafc', borderRadius: 8, padding: '10px 14px', border: '1px solid #e2e8f0' }}>
                     <div style={{ fontSize: 20, fontWeight: 800, color }}>{val}</div>
@@ -138,11 +138,11 @@ export default function Dashboard() {
               <DualBarChart
                 data={water.weeklyData}
                 label1="Supply (ML)" label2="Demand (ML)"
-                color1="#0ea5e9"    color2="#f97316"
+                color1="#0ea5e9" color2="#f97316"
               />
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 16 }}>
-                <ProgressBar label="Reservoir Storage"  value={water.reservoirStoragePct}  color="#0ea5e9" />
-                <ProgressBar label="Groundwater Level"  value={water.groundwaterStatusPct} color="#22c55e" />
+                <ProgressBar label="Reservoir Storage" value={water.reservoirStoragePct} color="#0ea5e9" />
+                <ProgressBar label="Groundwater Level" value={water.groundwaterStatusPct} color="#22c55e" />
                 <ProgressBar label="Daily Supply / Demand" value={water.dailyConsumptionML} max={water.dailyDemandML} color="#f97316" />
               </div>
             </div>
@@ -157,12 +157,12 @@ export default function Dashboard() {
             <div className="adm-card-pad">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10, marginBottom: 16 }}>
                 {[
-                  { label: 'Total',       val: tankers.total,       color: '#0ea5e9', bg: '#e0f2fe' },
-                  { label: 'Available',   val: tankers.available,   color: '#22c55e', bg: '#dcfce7' },
-                  { label: 'On Trip',     val: tankers.onTrip,      color: '#8b5cf6', bg: '#ede9fe' },
-                  { label: 'Assigned',    val: tankers.assigned,    color: '#3b82f6', bg: '#dbeafe' },
+                  { label: 'Total', val: tankers.total, color: '#0ea5e9', bg: '#e0f2fe' },
+                  { label: 'Available', val: tankers.available, color: '#22c55e', bg: '#dcfce7' },
+                  { label: 'On Trip', val: tankers.onTrip, color: '#8b5cf6', bg: '#ede9fe' },
+                  { label: 'Assigned', val: tankers.assigned, color: '#3b82f6', bg: '#dbeafe' },
                   { label: 'Maintenance', val: tankers.maintenance, color: '#f59e0b', bg: '#fef3c7' },
-                  { label: 'Utilization', val: `${Math.round((tankers.onTrip/tankers.total)*100)}%`, color: '#14b8a6', bg: '#ccfbf1' },
+                  { label: 'Utilization', val: `${Math.round((tankers.onTrip / tankers.total) * 100)}%`, color: '#14b8a6', bg: '#ccfbf1' },
                 ].map(({ label, val, color, bg }) => (
                   <div key={label} style={{ textAlign: 'center', padding: '12px 8px', background: bg, borderRadius: 10 }}>
                     <div style={{ fontSize: 22, fontWeight: 800, color }}>{val}</div>
